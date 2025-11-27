@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}ShareMyCare - Your Digital Health Passport{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">Your Health. Your Control.</h1>
+        <p class="hero-subtitle">A secure platform to store and share your health information with the clinicians who care for you.</p>
+        <div class="hero-buttons">
+            {% if user.is_authenticated %}
+                <a href="{% url 'health_records:dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+            {% else %}
+                <a href="{% url 'register' %}" class="btn btn-primary">Get Started</a>
+                <a href="{% url 'login' %}" class="btn btn-secondary">Sign In</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Problem Statement -->
+<section class="problem-section" id="about">
+    <div class="container">
+        <h2 class="section-title">Born from a Critical Need</h2>
+        <div class="problem-content">
+            <p class="problem-text">
+                ShareMyCare was created after a life-threatening experience where a paramedic's assessment was completely wrong, 
+                and medical records were inaccessible even with proper consent. As a healthcare professional, intervention was required 
+                to ensure proper care - a decision that ultimately saved a life.
+            </p>
+            <p class="problem-text">
+                This highlighted a fundamental gap: in emergency situations, healthcare providers need immediate access to complete 
+                medical histories to make accurate assessments. Patients and families must be able to share critical health information 
+                when it matters most.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section" id="features">
+    <div class="container">
+        <h2 class="section-title">Everything you need. All in one place.</h2>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📋</div>
+                <h3>Complete Health Records</h3>
+                <p>Store conditions, medications (prescribed and non-prescribed), allergies, and assessments all in one secure location.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Secure & Private</h3>
+                <p>You control who has access to your information. Grant or revoke access to clinicians and family members at any time.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Emergency Ready</h3>
+                <p>Critical health information accessible instantly for paramedics and emergency staff, even when you can't communicate.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">👨‍⚕️</div>
+                <h3>Clinician Access</h3>
+                <p>Share your records with healthcare providers to reduce history-taking time and ensure accurate assessments.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">💊</div>
+                <h3>Complete Medication List</h3>
+                <p>Track all medications, including non-prescribed ones that may not appear in official medical records.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">👨‍👩‍👧</div>
+                <h3>Family Access</h3>
+                <p>Grant temporary or permanent access to family members and caregivers with your consent.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Benefits Section -->
+<section class="benefits-section">
+    <div class="container">
+        <div class="benefits-grid">
+            <div class="benefit-item">
+                <h3>For Patients</h3>
+                <ul>
+                    <li>Centralized health information</li>
+                    <li>Control over your data</li>
+                    <li>Easy sharing with clinicians</li>
+                    <li>Emergency access when needed</li>
+                </ul>
+            </div>
+            
+            <div class="benefit-item">
+                <h3>For Clinicians</h3>
+                <ul>
+                    <li>Complete patient history</li>
+                    <li>Reduced history-taking time</li>
+                    <li>All medications listed</li>
+                    <li>Accurate assessments</li>
+                </ul>
+            </div>
+            
+            <div class="benefit-item">
+                <h3>For Emergency Responders</h3>
+                <ul>
+                    <li>Instant access to critical info</li>
+                    <li>Complete medication lists</li>
+                    <li>Allergy information</li>
+                    <li>Faster decision-making</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <h2 class="cta-title">Ready to take control of your health records?</h2>
+        <p class="cta-subtitle">Join ShareMyCare today and ensure your health information is always accessible when it matters most.</p>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'register' %}" class="btn btn-primary btn-large">Get Started Free</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
