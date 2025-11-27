@@ -18,6 +18,29 @@ The platform streamlines the clinical workflow by providing clinicians with imme
 
 **Important:** The platform allows patients to record all medications they are taking, including those not prescribed by a healthcare provider. This is critical information that may not appear in official medical records but is essential for clinicians and emergency responders to make informed treatment decisions and avoid potentially dangerous drug interactions.
 
+## Key Features
+
+### 1. Your Health, In Your Hands
+Patients own their physiotherapy history, not the clinic. You maintain complete control over your health records and decide how they're used.
+
+### 2. Share With Any Clinician, Anytime
+Rehab continuity made simple: physios, doctors, osteopaths, anyone you trust. Grant access instantly when needed, revoke it just as easily.
+
+### 3. A Complete Health Passport
+Conditions, medications, assessments — all in one clear summary. Your entire health journey in a single, accessible location.
+
+### 4. Built for Physiotherapists
+Structured assessments: subjective, objective, plan, outcome measures. Designed specifically to support physiotherapy practice and patient care.
+
+### 5. Secure, Permission-Based Access
+You decide who sees what — and for how long. Granular control over your health information with time-limited access options.
+
+### 6. Designed for Independent Practice
+Perfect for private physios who need quick patient history. Streamlined access to comprehensive patient information without the complexity of large hospital systems.
+
+### 7. Consistent Care Across Your Journey
+No repeating your story at every appointment. Your complete history travels with you, ensuring continuity of care across all healthcare providers.
+
 ## User Stories
 
 ### Target Audience

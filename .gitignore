@@ -33,7 +33,8 @@ db.sqlite3
 db.sqlite3-journal
 /media
 /staticfiles
-/static
+# Note: /static is removed to allow tracking of source static files (CSS, JS, images)
+# Only collected static files in /staticfiles should be ignored
 
 # IDE
 .vscode/

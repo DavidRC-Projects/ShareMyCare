@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Get Started - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 4rem 0; max-width: 400px; margin: 0 auto;">
+    <h1 style="text-align: center; margin-bottom: 2rem; font-size: 2rem;">Create Account</h1>
+    <form method="post" style="display: flex; flex-direction: column; gap: 1rem;">
+        {% csrf_token %}
+        {% if form.errors %}
+            <div style="color: #d70015; margin-bottom: 1rem;">
+                <p>Please correct the errors below:</p>
+                {{ form.errors }}
+            </div>
+        {% endif %}
+        <div>
+            <label for="id_username">Username</label>
+            <input type="text" name="username" id="id_username" required 
+                   value="{{ form.username.value|default:'' }}">
+            {% if form.username.errors %}
+                <div style="color: #d70015; font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ form.username.errors }}
+                </div>
+            {% endif %}
+        </div>
+        <div>
+            <label for="id_password1">Password</label>
+            <input type="password" name="password1" id="id_password1" required>
+            {% if form.password1.errors %}
+                <div style="color: #d70015; font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ form.password1.errors }}
+                </div>
+            {% endif %}
+        </div>
+        <div>
+            <label for="id_password2">Password confirmation</label>
+            <input type="password" name="password2" id="id_password2" required>
+            {% if form.password2.errors %}
+                <div style="color: #d70015; font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ form.password2.errors }}
+                </div>
+            {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Create Account</button>
+    </form>
+    <p style="text-align: center; margin-top: 1rem; color: var(--text-secondary);">
+        Already have an account? <a href="{% url 'login' %}" style="color: var(--primary-color);">Sign In</a>
+    </p>
+</div>
+{% endblock %}
+

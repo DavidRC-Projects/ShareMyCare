@@ -100,7 +100,7 @@ class FamilyMemberAccess(models.Model):
     family_member = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='patient_accesses',
+        related_name='family_member_accesses',
         help_text="The family member/caregiver who has access"
     )
     relationship = models.CharField(
