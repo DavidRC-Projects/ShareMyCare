@@ -2,9 +2,9 @@
 
 ## The Problem
 
-ShareMyCare was born from a life-threatening gap in healthcare accessibility. When a family member was taken to hospital, the paramedic's assessment was completely wrong, and attempts to access medical records with proper consent were blocked because the records were stored on a system that couldn't be accessed. 
+ShareMyCare was born from a life-threatening gap in healthcare accessibility. When a family member was taken to hospital, the paramedic's assessment was completely wrong and advised them to see a doctor the next day for strong pain relief. As a healthcare professional i picked up on many red flags that warranted an admission to hospital and had to advise the paramedics at the time, ultimately allowing the family member to be taken to accidents and emergencies. 
 
-As a healthcare professional, intervention was required to force the paramedic's hand to hospitalize the patient - a decision that ultimately saved her life. The patient was too drowsy to provide details, so a full medical history had to be provided verbally to the A&E doctor. A complete, accessible medical history could have sped up decision-making from paramedic to A&E doctor, potentially preventing the critical misassessment.
+As a healthcare professional, intervention was required to force the paramedic's hand to hospitalise my family member - a decision that ultimately saved her life. The patient was too drowsy and in severe pain to provide the correct details to the doctor, so a full medical history had to be provided verbally to the A&E doctor that led the the correct course of action. A complete, accessible medical history could have sped up decision-making from paramedic to A&E doctor, potentially preventing the critical misassessment.
 
 This experience highlighted a fundamental issue: in emergency situations, paramedics and emergency staff need immediate access to complete medical histories to make accurate assessments. Patients and their families must be able to share critical health information when it matters most, especially when patients cannot advocate for themselves.
 
@@ -12,9 +12,11 @@ This experience highlighted a fundamental issue: in emergency situations, parame
 
 Share My Care = A secure web platform where patients store their health info (conditions, medications, assessments) and choose which clinicians can view it.
 
-Think: a digital health passport + physiotherapy record system.
+Think: a digital health passport + record system.
 
 The platform streamlines the clinical workflow by providing clinicians with immediate access to patients' medical records, significantly reducing the time spent on history taking and subjective assessments during consultations.
+
+**Important:** The platform allows patients to record all medications they are taking, including those not prescribed by a healthcare provider. This is critical information that may not appear in official medical records but is essential for clinicians and emergency responders to make informed treatment decisions and avoid potentially dangerous drug interactions.
 
 ## User Stories
 
@@ -36,6 +38,7 @@ As a first-time user, I want to:
 - Learn about the security and privacy features of the platform
 - Create a secure account with authentication
 - Add my basic health information (conditions, medications, allergies)
+- Record all medications I'm taking, including non-prescribed medications that may not be in my medical records
 - Understand how to share my information with clinicians
 - See a clear overview of my health dashboard
 - Know that my data is secure and I control who can access it
@@ -45,6 +48,7 @@ As a first-time user, I want to:
 As a returning user, I want to:
 - Quickly access my stored health information
 - Update my health records (add new conditions, medications, or assessments)
+- Add both prescribed and non-prescribed medications to my record
 - View my health history and past assessments
 - Manage which clinicians have access to my information
 - Grant access to new clinicians when needed
@@ -61,6 +65,8 @@ As a returning user, I want to:
 As a clinician, I want to:
 - Access my patients' medical records quickly and securely
 - View comprehensive patient history (conditions, medications, past assessments) before consultations
+- See all medications a patient is taking, including non-prescribed medications that may not be in official medical records
+- Identify potential drug interactions by having complete medication information
 - Reduce time spent on subjective assessment and history taking
 - See a complete timeline of a patient's health information and treatments
 - Access physiotherapy assessments and treatment notes from previous sessions
@@ -73,6 +79,7 @@ As a clinician, I want to:
 As a paramedic or emergency responder, I want to:
 - Access a patient's complete medical history immediately in emergency situations
 - View current medications, conditions, and allergies before making treatment decisions
+- See all medications including non-prescribed ones to avoid dangerous drug interactions
 - Make accurate assessments based on comprehensive patient information
 - Speed up decision-making by having critical health information readily available
 - Avoid misassessments that could delay appropriate care
@@ -89,3 +96,4 @@ As a family member or caregiver, I want to:
 - Ensure paramedics and emergency staff have access to accurate medical history
 - Help prevent misassessments by providing comprehensive patient information
 - Have peace of mind knowing I can access and share health records when needed
+
