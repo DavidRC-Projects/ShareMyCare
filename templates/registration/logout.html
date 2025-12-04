@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign Out - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card logout-card">
+        <h1 class="auth-title">Sign Out</h1>
+        <p class="logout-message">
+            Are you sure you want to sign out?<br>
+            You'll need to sign in again to access your health records.
+        </p>
+        <form method="post" action="{% url 'logout' %}" class="logout-actions">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Sign Out</button>
+            <a href="{% url 'health_records:home' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

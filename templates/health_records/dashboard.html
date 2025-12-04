@@ -1,11 +1,520 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Dashboard - ShareMyCare{% endblock %}
 
 {% block content %}
-<div class="container" style="padding: 2rem 0;">
-    <h1>Welcome to your Dashboard, {{ user.username }}!</h1>
-    <p>Your health records dashboard will be available here soon.</p>
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Your Health Dashboard</h1>
+        <p class="dashboard-subtitle">Welcome back, {{ user.get_full_name|default:user.username }}!</p>
+        <div class="dashboard-header-actions">
+            <a href="{% url 'health_records:invite_clinician' %}" class="btn btn-primary btn-header">Share with Clinicians</a>
+        </div>
+    </div>
+
+
+    <div class="dashboard-grid">
+        <!-- Medications Section -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <img src="{% static 'images/meds.png' %}" alt="Medications" class="card-icon">
+                    <div>
+                        <h2 class="card-title">Medications</h2>
+                        <p class="card-count">{{ medications.count }} medication{{ medications.count|pluralize }}</p>
+                    </div>
+                </div>
+                <a href="{% url 'health_records:add_medication' %}" class="btn btn-primary btn-sm">Add +</a>
+            </div>
+            <div class="card-content">
+                {% if medications %}
+                    <div class="items-list">
+                        {% for medication in medications|slice:":3" %}
+                            <div class="item-row">
+                                <div class="item-info">
+                                    <div class="item-header">
+                                        <h4>{{ medication.name }}</h4>
+                                        {% if medication.prescription_image %}
+                                            <span class="prescription-badge" title="Prescription image available">📷</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="item-details">
+                                        {% if medication.dosage %}{{ medication.dosage }}{% endif %}
+                                        {% if medication.frequency %} • {{ medication.frequency }}{% endif %}
+                                    </p>
+                                    <div class="item-badges">
+                                        {% if medication.is_active %}
+                                            <span class="badge badge-success">Active</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">Inactive</span>
+                                        {% endif %}
+                                        {% if medication.is_prescribed %}
+                                            <span class="badge badge-primary">Prescribed</span>
+                                        {% else %}
+                                            <span class="badge badge-info">Non-prescribed</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="item-actions">
+                                    <a href="{% url 'health_records:edit_medication' medication.pk %}" class="btn-icon" title="Edit">✏️</a>
+                                    <a href="{% url 'health_records:delete_medication' medication.pk %}" class="btn-icon btn-icon-danger" title="Delete">🗑️</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        {% if medications.count > 3 %}
+                            <p class="more-items">+ {{ medications.count|add:"-3" }} more medication{{ medications.count|add:"-3"|pluralize }}</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <p>No medications added yet.</p>
+                        <a href="{% url 'health_records:add_medication' %}" class="btn btn-secondary btn-sm">Add Your First Medication</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Conditions Section -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <img src="{% static 'images/healthrecords.png' %}" alt="Conditions" class="card-icon">
+                    <div>
+                        <h2 class="card-title">Conditions</h2>
+                        <p class="card-count">{{ conditions.count }} condition{{ conditions.count|pluralize }}</p>
+                    </div>
+                </div>
+                <a href="{% url 'health_records:add_condition' %}" class="btn btn-primary btn-sm">Add +</a>
+            </div>
+            <div class="card-content">
+                {% if conditions %}
+                    <div class="items-list">
+                        {% for condition in conditions|slice:":3" %}
+                            <div class="item-row">
+                                <div class="item-info">
+                                    <h4>{{ condition.name }}</h4>
+                                    <p class="item-details">
+                                        {% if condition.diagnosis_date %}Diagnosed: {{ condition.diagnosis_date|date:"M Y" }}{% endif %}
+                                    </p>
+                                    <div class="item-badges">
+                                        <span class="badge badge-{{ condition.status }}">{{ condition.get_status_display }}</span>
+                                    </div>
+                                </div>
+                                <div class="item-actions">
+                                    <a href="{% url 'health_records:edit_condition' condition.pk %}" class="btn-icon" title="Edit">✏️</a>
+                                    <a href="{% url 'health_records:delete_condition' condition.pk %}" class="btn-icon btn-icon-danger" title="Delete">🗑️</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        {% if conditions.count > 3 %}
+                            <p class="more-items">+ {{ conditions.count|add:"-3" }} more condition{{ conditions.count|add:"-3"|pluralize }}</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <p>No conditions added yet.</p>
+                        <a href="{% url 'health_records:add_condition' %}" class="btn btn-secondary btn-sm">Add Your First Condition</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Allergies Section -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="card-icon-emoji">⚠️</div>
+                    <div>
+                        <h2 class="card-title">Allergies</h2>
+                        <p class="card-count">{{ allergies.count }} allerg{{ allergies.count|pluralize:"y,ies" }}</p>
+                    </div>
+                </div>
+                <a href="{% url 'health_records:add_allergy' %}" class="btn btn-primary btn-sm">Add +</a>
+            </div>
+            <div class="card-content">
+                {% if allergies %}
+                    <div class="items-list">
+                        {% for allergy in allergies|slice:":3" %}
+                            <div class="item-row">
+                                <div class="item-info">
+                                    <h4>{{ allergy.allergen }}</h4>
+                                    <p class="item-details">{{ allergy.reaction|truncatewords:10 }}</p>
+                                    <div class="item-badges">
+                                        <span class="badge badge-severity-{{ allergy.severity }}">{{ allergy.get_severity_display }}</span>
+                                    </div>
+                                </div>
+                                <div class="item-actions">
+                                    <a href="{% url 'health_records:edit_allergy' allergy.pk %}" class="btn-icon" title="Edit">✏️</a>
+                                    <a href="{% url 'health_records:delete_allergy' allergy.pk %}" class="btn-icon btn-icon-danger" title="Delete">🗑️</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        {% if allergies.count > 3 %}
+                            <p class="more-items">+ {{ allergies.count|add:"-3" }} more allerg{{ allergies.count|add:"-3"|pluralize:"y,ies" }}</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <p>No allergies recorded yet.</p>
+                        <a href="{% url 'health_records:add_allergy' %}" class="btn btn-secondary btn-sm">Add Your First Allergy</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Symptoms Section -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="card-icon-emoji">📋</div>
+                    <div>
+                        <h2 class="card-title">Symptoms</h2>
+                        <p class="card-count">{{ assessments.count }} entr{{ assessments.count|pluralize:"y,ies" }}</p>
+                    </div>
+                </div>
+                <a href="{% url 'health_records:add_assessment' %}" class="btn btn-primary btn-sm">Add +</a>
+            </div>
+            <div class="card-content">
+                {% if assessments %}
+                    <div class="items-list">
+                        {% for assessment in assessments|slice:":3" %}
+                            <div class="item-row">
+                                <div class="item-info">
+                                    <div class="item-header">
+                                        <h4>
+                                            {% if assessment.symptom_date %}
+                                                {{ assessment.symptom_date|date:"d M Y" }}
+                                            {% else %}
+                                                Symptom Entry
+                                            {% endif %}
+                                        </h4>
+                                        {% if assessment.has_practitioner_data %}
+                                            <span class="practitioner-badge" title="Practitioner assessment available">👨‍⚕️</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="item-details">
+                                        {% if assessment.current_symptoms %}
+                                            {{ assessment.current_symptoms|truncatewords:15 }}
+                                        {% elif assessment.pain_level is not None %}
+                                            Pain Level: {{ assessment.pain_level }}/10
+                                        {% else %}
+                                            Symptom entry
+                                        {% endif %}
+                                    </p>
+                                    <div class="item-badges">
+                                        {% if assessment.pain_level is not None %}
+                                            <span class="badge badge-pain-{{ assessment.pain_level|floatformat:0 }}">Pain: {{ assessment.pain_level }}/10</span>
+                                        {% endif %}
+                                        {% if assessment.has_practitioner_data %}
+                                            <span class="badge badge-primary">Practitioner Assessment</span>
+                                        {% endif %}
+                                        {% if assessment.practitioner_notes_image %}
+                                            <span class="prescription-badge" title="Practitioner notes photo available">📷</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="item-actions">
+                                    <a href="{% url 'health_records:edit_assessment' assessment.pk %}" class="btn-icon" title="Edit">✏️</a>
+                                    <a href="{% url 'health_records:delete_assessment' assessment.pk %}" class="btn-icon btn-icon-danger" title="Delete">🗑️</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        {% if assessments.count > 3 %}
+                            <p class="more-items">+ {{ assessments.count|add:"-3" }} more entr{{ assessments.count|add:"-3"|pluralize:"y,ies" }}</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <p>No symptoms recorded yet.</p>
+                        <a href="{% url 'health_records:add_assessment' %}" class="btn btn-secondary btn-sm">Add Your First Symptoms</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Share with Clinicians Section - Prominent Position -->
+        <div class="dashboard-card clinician-share-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="card-icon-emoji">👨‍⚕️</div>
+                    <div>
+                        <h2 class="card-title">Share with Clinicians</h2>
+                        <p class="card-count">{{ clinician_accesses.count }} clinician{{ clinician_accesses.count|pluralize }} with access</p>
+                    </div>
+                </div>
+                <a href="{% url 'health_records:invite_clinician' %}" class="btn btn-primary btn-sm">Invite +</a>
+            </div>
+            <div class="card-content">
+                {% if clinician_accesses %}
+                    <div class="items-list">
+                        {% for access in clinician_accesses|slice:":3" %}
+                            <div class="item-row">
+                                <div class="item-info">
+                                    <h4>{{ access.clinician.full_name }}</h4>
+                                    <p class="item-details">
+                                        {% if access.clinician.organisation %}{{ access.clinician.organisation }}{% endif %}
+                                        {% if access.clinician.speciality %} • {{ access.clinician.speciality }}{% endif %}
+                                    </p>
+                                    <div class="item-badges">
+                                        <span class="badge badge-{{ access.access_level }}">{{ access.get_access_level_display }}</span>
+                                        {% if access.consent_given_at %}
+                                            <span class="badge badge-info">Access granted {{ access.consent_given_at|date:"M Y" }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="item-actions">
+                                    <a href="{% url 'health_records:revoke_clinician_access' access.pk %}" class="btn-icon btn-icon-danger" title="Revoke Access">🚫</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if clinician_accesses.count > 3 %}
+                        <div style="margin-top: var(--spacing-sm); text-align: center;">
+                            <a href="{% url 'health_records:invite_clinician' %}" class="btn btn-secondary btn-sm">View All & Manage</a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-state">
+                        <p>No clinicians have access yet.</p>
+                        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            Invite healthcare professionals to view your records and add objective assessments.
+                        </p>
+                        <a href="{% url 'health_records:invite_clinician' %}" class="btn btn-primary btn-sm" style="margin-top: var(--spacing-sm);">Invite a Clinician</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Personal Information Section -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="card-icon-emoji">👤</div>
+                    <div>
+                        <h2 class="card-title">Personal Information</h2>
+                    </div>
+                </div>
+                <a href="{% url 'health_records:edit_profile' %}" class="btn btn-primary btn-sm">Edit</a>
+            </div>
+            <div class="card-content">
+                <div class="profile-info">
+                    <div class="info-row">
+                        <span class="info-label">Date of Birth:</span>
+                        <span class="info-value">{% if profile.date_of_birth %}{{ profile.date_of_birth|date:"d M Y" }}{% else %}Not set{% endif %}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Phone Number:</span>
+                        <span class="info-value">{% if profile.phone_number %}{{ profile.phone_number }}{% else %}Not set{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Work Section -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="card-icon-emoji">💼</div>
+                    <div>
+                        <h2 class="card-title">Current Work</h2>
+                        <p class="card-count">{{ current_work.count }} job{{ current_work.count|pluralize }}</p>
+                    </div>
+                </div>
+                <a href="{% url 'health_records:add_work_history' %}" class="btn btn-primary btn-sm">Add +</a>
+            </div>
+            <div class="card-content">
+                {% if current_work %}
+                    <div class="items-list">
+                        {% for work in current_work|slice:":3" %}
+                            <div class="item-row">
+                                <div class="item-info">
+                                    <h4>{{ work.job_title }}</h4>
+                                    <p class="item-details">
+                                        {% if work.employer %}{{ work.employer }} • {% endif %}
+                                        Since {{ work.start_date|date:"M Y" }}
+                                        {% if work.hours_per_week %} • {{ work.hours_per_week }} hrs/week{% endif %}
+                                    </p>
+                                    {% if work.activities %}
+                                        <div class="item-badges">
+                                            {% for activity in work.get_activities_display %}
+                                                <span class="badge badge-info">{{ activity }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="item-actions">
+                                    <a href="{% url 'health_records:edit_work_history' work.pk %}" class="btn-icon" title="Edit">✏️</a>
+                                    <a href="{% url 'health_records:delete_work_history' work.pk %}" class="btn-icon btn-icon-danger" title="Delete">🗑️</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        {% if current_work.count > 3 %}
+                            <p class="more-items">+ {{ current_work.count|add:"-3" }} more job{{ current_work.count|add:"-3"|pluralize }}</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <p>No current work recorded yet.</p>
+                        <a href="{% url 'health_records:add_work_history' %}" class="btn btn-secondary btn-sm">Add Your Current Work</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Previous Work Section -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="card-icon-emoji">📋</div>
+                    <div>
+                        <h2 class="card-title">Previous Work</h2>
+                        <p class="card-count">{{ previous_work.count }} job{{ previous_work.count|pluralize }}</p>
+                    </div>
+                </div>
+                <a href="{% url 'health_records:add_work_history' %}" class="btn btn-primary btn-sm">Add +</a>
+            </div>
+            <div class="card-content">
+                {% if previous_work %}
+                    <div class="items-list">
+                        {% for work in previous_work|slice:":3" %}
+                            <div class="item-row">
+                                <div class="item-info">
+                                    <h4>{{ work.job_title }}</h4>
+                                    <p class="item-details">
+                                        {% if work.employer %}{{ work.employer }} • {% endif %}
+                                        {{ work.start_date|date:"M Y" }} - {% if work.end_date %}{{ work.end_date|date:"M Y" }}{% else %}Present{% endif %}
+                                        {% if work.hours_per_week %} • {{ work.hours_per_week }} hrs/week{% endif %}
+                                    </p>
+                                    {% if work.activities %}
+                                        <div class="item-badges">
+                                            {% for activity in work.get_activities_display %}
+                                                <span class="badge badge-info">{{ activity }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="item-actions">
+                                    <a href="{% url 'health_records:edit_work_history' work.pk %}" class="btn-icon" title="Edit">✏️</a>
+                                    <a href="{% url 'health_records:delete_work_history' work.pk %}" class="btn-icon btn-icon-danger" title="Delete">🗑️</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        {% if previous_work.count > 3 %}
+                            <p class="more-items">+ {{ previous_work.count|add:"-3" }} more job{{ previous_work.count|add:"-3"|pluralize }}</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <p>No previous work recorded yet.</p>
+                        <a href="{% url 'health_records:add_work_history' %}" class="btn btn-secondary btn-sm">Add Previous Work</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Healthcare Feedback Section -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="card-icon-emoji">💬</div>
+                    <div>
+                        <h2 class="card-title">Healthcare Feedback</h2>
+                        <p class="card-count">{{ feedback.count }} feedback entr{{ feedback.count|pluralize:"y,ies" }}</p>
+                    </div>
+                </div>
+                <a href="{% url 'health_records:add_feedback' %}" class="btn btn-primary btn-sm">Add +</a>
+            </div>
+            <div class="card-content">
+                {% if feedback %}
+                    <div class="items-list">
+                        {% for item in feedback|slice:":3" %}
+                            <div class="item-row">
+                                <div class="item-info">
+                                    <h4>{{ item.organisation }}</h4>
+                                    <p class="item-details">
+                                        {{ item.get_feedback_type_display }} • 
+                                        {{ item.created_at|date:"d M Y" }}
+                                        {% if item.is_anonymous %} • Anonymous{% endif %}
+                                    </p>
+                                    <div class="item-badges">
+                                        <span class="badge badge-rating-{{ item.rating }}">⭐ {{ item.rating }}/5</span>
+                                        {% if item.is_private %}
+                                            <span class="badge badge-info">Private</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="item-actions">
+                                    <a href="{% url 'health_records:delete_feedback' item.pk %}" class="btn-icon btn-icon-danger" title="Delete">🗑️</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        {% if feedback.count > 3 %}
+                            <p class="more-items">+ {{ feedback.count|add:"-3" }} more entr{{ feedback.count|add:"-3"|pluralize:"y,ies" }}</p>
+                        {% endif %}
+                        <div style="margin-top: var(--spacing-sm);">
+                            <a href="{% url 'health_records:view_feedback' %}" class="btn btn-secondary btn-sm">View All Feedback</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <p>No feedback submitted yet.</p>
+                        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            Share your experience with healthcare organizations (feedback is private and linked to organizations, not individual HCPs).
+                        </p>
+                        {% if clinician_accesses %}
+                            <div style="margin-top: var(--spacing-sm);">
+                                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Quick feedback for organizations you've worked with:</p>
+                                {% for access in clinician_accesses|slice:":3" %}
+                                    {% if access.clinician.organisation %}
+                                        <a href="{% url 'health_records:add_feedback_for_access' access.pk %}" class="btn btn-secondary btn-sm" style="margin: 0.25rem; display: inline-block;">
+                                            Feedback: {{ access.clinician.organisation }}
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <a href="{% url 'health_records:add_feedback' %}" class="btn btn-primary btn-sm" style="margin-top: var(--spacing-sm);">Submit General Feedback</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Emergency Contacts Section -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="card-icon-emoji">🚨</div>
+                    <div>
+                        <h2 class="card-title">Emergency Contacts</h2>
+                    </div>
+                </div>
+                <a href="{% url 'health_records:edit_profile' %}" class="btn btn-primary btn-sm">Edit</a>
+            </div>
+            <div class="card-content">
+                <div class="profile-info">
+                    {% if profile.emergency_contact_name %}
+                        <div class="info-row">
+                            <span class="info-label">Name:</span>
+                            <span class="info-value">{{ profile.emergency_contact_name }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Relationship:</span>
+                            <span class="info-value">{{ profile.emergency_contact_relationship|default:"Not specified" }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Phone:</span>
+                            <span class="info-value">{{ profile.emergency_contact_phone }}</span>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <p>No emergency contact set.</p>
+                            <a href="{% url 'health_records:edit_profile' %}" class="btn btn-secondary btn-sm">Add Emergency Contact</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
-

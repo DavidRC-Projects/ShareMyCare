@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete {{ item_type|title }} - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1 class="form-title">Delete {{ item_type|title }}</h1>
+            <a href="{% url 'health_records:dashboard' %}" class="btn-close">✕</a>
+        </div>
+        
+        <div class="delete-confirm">
+            <p class="delete-message">Are you sure you want to delete this {{ item_type }}?</p>
+            <div class="delete-item-info">
+                {% if item_type == 'medication' %}
+                    <h3>{{ item.name }}</h3>
+                    <p>{{ item.dosage }} • {{ item.frequency }}</p>
+                {% elif item_type == 'condition' %}
+                    <h3>{{ item.name }}</h3>
+                    <p>{{ item.get_status_display }}</p>
+                {% elif item_type == 'allergy' %}
+                    <h3>{{ item.allergen }}</h3>
+                    <p>{{ item.get_severity_display }} • {{ item.reaction|truncatewords:10 }}</p>
+                {% elif item_type == 'symptom entry' or item_type == 'assessment' %}
+                    <h3>Symptom Entry</h3>
+                    <p>
+                        {% if item.symptom_date %}
+                            {{ item.symptom_date|date:"d M Y" }}
+                        {% else %}
+                            No date specified
+                        {% endif %}
+                        {% if item.current_symptoms %}
+                            • {{ item.current_symptoms|truncatewords:10 }}
+                        {% elif item.pain_level is not None %}
+                            • Pain Level: {{ item.pain_level }}/10
+                        {% endif %}
+                    </p>
+                {% elif item_type == 'work history' %}
+                    <h3>{{ item.job_title }}</h3>
+                    <p>
+                        {% if item.employer %}{{ item.employer }} • {% endif %}
+                        {{ item.start_date|date:"M Y" }} - {% if item.end_date %}{{ item.end_date|date:"M Y" }}{% else %}Present{% endif %}
+                        {% if item.is_current %} • Current Job{% endif %}
+                    </p>
+                {% elif item_type == 'feedback' %}
+                    <h3>Feedback for {{ item.organisation }}</h3>
+                    <p>
+                        Rating: {{ item.get_rating_display }} • {{ item.get_feedback_type_display }}
+                        • {{ item.created_at|date:"d M Y" }}
+                        {% if item.is_anonymous %} • Anonymous{% endif %}
+                    </p>
+                {% endif %}
+            </div>
+            
+            <form method="post" class="form-actions">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                <a href="{% url 'health_records:dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

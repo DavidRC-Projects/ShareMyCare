@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Server Error - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 4rem 0; max-width: 600px; margin: 0 auto; text-align: center;">
+    <h1 style="font-size: 4rem; font-weight: 600; color: #d70015; margin-bottom: 1rem;">500</h1>
+    <h2 style="font-size: 2rem; margin-bottom: 1rem;">Server Error</h2>
+    <p style="font-size: 1.125rem; color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.6;">
+        We're sorry, but something went wrong on our end. Our team has been notified and is working to fix the issue.
+    </p>
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{% url 'health_records:home' %}" class="btn btn-primary">Go to Home</a>
+        <a href="javascript:location.reload()" class="btn btn-secondary">Try Again</a>
+    </div>
+</div>
+{% endblock %}
+

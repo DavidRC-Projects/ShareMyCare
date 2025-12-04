@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Assessment - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1 class="form-title">
+                {% if is_physiotherapist %}
+                    Create Physiotherapy Assessment
+                {% else %}
+                    Create New Assessment
+                {% endif %}
+            </h1>
+            <a href="{% url 'clinicians:dashboard' %}" class="btn-close">✕</a>
+        </div>
+        
+        <div class="patient-info-box">
+            <p><strong>Patient:</strong> {{ patient.get_full_name|default:patient.username }}</p>
+        </div>
+        
+        <form method="post" class="form" enctype="multipart/form-data" id="assessmentForm">
+            {% csrf_token %}
+            
+            {# Hidden input to ensure assessment_type submits for physiotherapists #}
+            {% if is_physiotherapist %}
+                <input type="hidden" name="assessment_type" value="physiotherapy" id="assessment_type_hidden">
+            {% endif %}
+            
+            {% if is_physiotherapist %}
+                <h3 class="form-section-title">Subjective Assessment (Patient-Reported Symptoms)</h3>
+                
+                <div class="form-group">
+                    <label for="{{ form.symptom_date.id_for_label }}">Symptom Date</label>
+                    {{ form.symptom_date }}
+                    {% if form.symptom_date.errors %}
+                        <span class="field-error">{{ form.symptom_date.errors.0 }}</span>
+                    {% endif %}
+                    <p class="form-hint">Date when symptoms were reported</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.current_symptoms.id_for_label }}">Current Symptoms</label>
+                    {{ form.current_symptoms }}
+                    {% if form.current_symptoms.errors %}
+                        <span class="field-error">{{ form.current_symptoms.errors.0 }}</span>
+                    {% endif %}
+                    <p class="form-hint">Current symptoms described by the patient</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.previous_symptoms.id_for_label }}">Previous Symptoms</label>
+                    {{ form.previous_symptoms }}
+                    {% if form.previous_symptoms.errors %}
+                        <span class="field-error">{{ form.previous_symptoms.errors.0 }}</span>
+                    {% endif %}
+                    <p class="form-hint">Previous symptoms that have resolved or changed</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.condition_progression.id_for_label }}">Condition Progression</label>
+                    {{ form.condition_progression }}
+                    {% if form.condition_progression.errors %}
+                        <span class="field-error">{{ form.condition_progression.errors.0 }}</span>
+                    {% endif %}
+                    <p class="form-hint">How the condition has progressed over time</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.pain_level.id_for_label }}">Pain Level (0-10)</label>
+                    {{ form.pain_level }}
+                    {% if form.pain_level.errors %}
+                        <span class="field-error">{{ form.pain_level.errors.0 }}</span>
+                    {% endif %}
+                    <p class="form-hint">Pain level from 0 (no pain) to 10 (worst pain)</p>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--spacing-xl);">
+                    <h3 class="form-section-title" style="margin: 0;">Objective Assessment</h3>
+                    {% if is_physiotherapist %}
+                        <button type="button" class="btn btn-secondary" onclick="saveAndAddObjectiveMeasures()" style="margin-left: 1rem;">
+                            ➕ Add Detailed ROM & Strength
+                        </button>
+                    {% endif %}
+                </div>
+                <p class="form-hint" style="margin-top: 0.5rem;">
+                    {% if is_physiotherapist %}
+                        Click the button above to add detailed range of motion and strength measurements for all joints.
+                    {% endif %}
+                </p>
+            {% else %}
+                <h3 class="form-section-title">Assessment Details</h3>
+            {% endif %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    {% if is_physiotherapist %}
+                        <label for="{{ form.assessment_type.id_for_label }}">Assessment Type</label>
+                        {{ form.assessment_type }}
+                        {% if form.assessment_type.errors %}
+                            <span class="field-error">{{ form.assessment_type.errors.0 }}</span>
+                        {% endif %}
+                        <p class="form-hint">Automatically set to Physiotherapy</p>
+                    {% else %}
+                        <label for="{{ form.assessment_type.id_for_label }}">Assessment Type</label>
+                        {{ form.assessment_type }}
+                        {% if form.assessment_type.errors %}
+                            <span class="field-error">{{ form.assessment_type.errors.0 }}</span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.assessment_date.id_for_label }}">Assessment Date</label>
+                    {{ form.assessment_date }}
+                    {% if form.assessment_date.errors %}
+                        <span class="field-error">{{ form.assessment_date.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.completed_at.id_for_label }}">Date & Time Completed</label>
+                {{ form.completed_at }}
+                {% if form.completed_at.errors %}
+                    <span class="field-error">{{ form.completed_at.errors.0 }}</span>
+                {% endif %}
+                <p class="form-hint">When this assessment was completed</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.objective_findings.id_for_label }}">Objective Findings</label>
+                {{ form.objective_findings }}
+                {% if form.objective_findings.errors %}
+                    <span class="field-error">{{ form.objective_findings.errors.0 }}</span>
+                {% endif %}
+                <p class="form-hint">Clinical findings and observations from your examination</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.treatment_plan.id_for_label }}">Treatment Plan</label>
+                {{ form.treatment_plan }}
+                {% if form.treatment_plan.errors %}
+                    <span class="field-error">{{ form.treatment_plan.errors.0 }}</span>
+                {% endif %}
+                <p class="form-hint">Treatment plan and recommendations</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.practitioner_notes.id_for_label }}">Additional Notes</label>
+                {{ form.practitioner_notes }}
+                {% if form.practitioner_notes.errors %}
+                    <span class="field-error">{{ form.practitioner_notes.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.practitioner_notes_image.id_for_label }}">Photo of Notes</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" name="{{ form.practitioner_notes_image.name }}" id="{{ form.practitioner_notes_image.id_for_label }}" class="form-file-input" accept="image/*" capture="environment">
+                    <label for="{{ form.practitioner_notes_image.id_for_label }}" class="file-upload-label">
+                        <span class="file-upload-text">📷 Take Photo or Choose Image</span>
+                    </label>
+                </div>
+                {% if form.practitioner_notes_image.errors %}
+                    <span class="field-error">{{ form.practitioner_notes_image.errors.0 }}</span>
+                {% endif %}
+                <p class="form-hint">You can take a photo of your notes or upload an existing image</p>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    {% if is_physiotherapist %}
+                        Save Assessment
+                    {% else %}
+                        Create Assessment
+                    {% endif %}
+                </button>
+                <a href="{% url 'clinicians:dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Handle disabled select field submission for physiotherapists
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('assessmentForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Check if form submission was already confirmed
+            if (form.dataset.confirmed === 'true') {
+                // Re-enable disabled fields so they submit, or use hidden input
+                const disabledFields = form.querySelectorAll('select[disabled]');
+                disabledFields.forEach(function(field) {
+                    field.disabled = false;
+                });
+                return true; // Allow submission
+            }
+            
+            // Prevent default submission to check for blank fields
+            e.preventDefault();
+            
+            // Check for blank important fields
+            const blankFields = [];
+            const importantFields = [
+                { name: 'symptom_date', label: 'Symptom Date', element: document.getElementById('{{ form.symptom_date.id_for_label }}') },
+                { name: 'current_symptoms', label: 'Current Symptoms', element: document.getElementById('{{ form.current_symptoms.id_for_label }}') },
+                { name: 'assessment_date', label: 'Assessment Date', element: document.getElementById('{{ form.assessment_date.id_for_label }}') },
+                { name: 'completed_at', label: 'Date & Time Completed', element: document.getElementById('{{ form.completed_at.id_for_label }}') },
+                { name: 'objective_findings', label: 'Objective Findings', element: document.getElementById('{{ form.objective_findings.id_for_label }}') },
+                { name: 'treatment_plan', label: 'Treatment Plan', element: document.getElementById('{{ form.treatment_plan.id_for_label }}') }
+            ];
+            
+            importantFields.forEach(function(field) {
+                if (field.element && !field.element.value.trim()) {
+                    blankFields.push(field.label);
+                }
+            });
+            
+            // If there are blank fields, show confirmation dialog
+            if (blankFields.length > 0) {
+                const fieldList = blankFields.join('\n• ');
+                const message = `The following fields have been left blank:\n\n• ${fieldList}\n\nAre you sure you want to continue and save this assessment?`;
+                
+                if (confirm(message)) {
+                    // User confirmed - mark as confirmed and submit
+                    form.dataset.confirmed = 'true';
+                    
+                    // Re-enable disabled fields
+                    const disabledFields = form.querySelectorAll('select[disabled]');
+                    disabledFields.forEach(function(field) {
+                        field.disabled = false;
+                    });
+                    
+                    form.submit();
+                } else {
+                    // User cancelled - do nothing
+                    return false;
+                }
+            } else {
+                // All fields filled - submit directly
+                form.dataset.confirmed = 'true';
+                
+                // Re-enable disabled fields
+                const disabledFields = form.querySelectorAll('select[disabled]');
+                disabledFields.forEach(function(field) {
+                    field.disabled = false;
+                });
+                
+                form.submit();
+            }
+        });
+    }
+});
+
+// Function to save assessment and redirect to objective measures
+function saveAndAddObjectiveMeasures() {
+    const form = document.getElementById('assessmentForm');
+    if (!form) return;
+    
+    // Mark as confirmed to skip the blank field check
+    form.dataset.confirmed = 'true';
+    
+    // Create a hidden input to indicate we want to add objective measures after saving
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = 'add_objective_measures';
+    hiddenInput.value = '1';
+    form.appendChild(hiddenInput);
+    
+    // Submit the form
+    form.submit();
+}
+</script>
+{% endblock %}
+

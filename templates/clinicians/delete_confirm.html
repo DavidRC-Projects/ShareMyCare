@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Account - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1 class="form-title">Delete Account</h1>
+            <a href="{% url 'clinicians:dashboard' %}" class="btn-close">✕</a>
+        </div>
+        
+        <div class="delete-confirm">
+            <p class="delete-message">Are you sure you want to delete your practitioner account?</p>
+            <div class="delete-item-info">
+                <h3>{{ clinician.full_name }}</h3>
+                <p>
+                    {{ clinician.get_title_display }}
+                    {% if clinician.speciality %} • {{ clinician.speciality }}{% endif %}
+                    {% if clinician.organisation %} • {{ clinician.organisation }}{% endif %}
+                </p>
+                <p style="margin-top: var(--spacing-sm); color: var(--text-secondary);">
+                    <strong>Warning:</strong> This action cannot be undone. Your account and all associated data will be permanently deleted.
+                </p>
+            </div>
+            
+            <form method="post" class="form-actions">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
+                <a href="{% url 'clinicians:dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

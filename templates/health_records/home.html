@@ -8,14 +8,54 @@
 <section class="hero">
     <div class="hero-content">
         <h1 class="hero-title">Your Health. Your Control.</h1>
-        <p class="hero-subtitle">A <strong>secure</strong> platform to store and share your health information with the clinicians who care for you.</p>
+        <p class="hero-subtitle">
+            <span class="word">A</span>
+            <span class="word"><strong>secure</strong></span>
+            <span class="word">platform</span>
+            <span class="word">to</span>
+            <span class="word">store</span>
+            <span class="word">and</span>
+            <span class="word">share</span>
+            <span class="word">your</span>
+            <span class="word">health</span>
+            <span class="word">information</span>
+            <span class="word">with</span>
+            <span class="word">the</span>
+            <span class="word">clinicians</span>
+            <span class="word">who</span>
+            <span class="word">care</span>
+            <span class="word">for</span>
+            <span class="word">you.</span>
+        </p>
         <div class="hero-buttons">
             {% if user.is_authenticated %}
                 <a href="{% url 'health_records:dashboard' %}" class="btn btn-primary btn-dashboard">Go to Dashboard</a>
             {% else %}
                 <a href="{% url 'register' %}" class="btn btn-primary">Get Started</a>
-                <a href="{% url 'login' %}" class="btn btn-secondary">Sign In</a>
             {% endif %}
+        </div>
+        {% if not user.is_authenticated %}
+            <div class="practitioner-link">
+                <a href="{% url 'clinicians:practitioner_login' %}" class="btn btn-primary">Healthcare Professional login</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Scroll Indicator Section -->
+<section class="scroll-indicator-section">
+    <div class="scroll-indicator" onclick="document.getElementById('about').scrollIntoView({behavior: 'smooth'})">
+        <p class="scroll-text">Scroll to learn more</p>
+        <div class="scroll-arrow">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 10L12 15L17 10" stroke="url(#scrollGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs>
+                    <linearGradient id="scrollGradient" x1="7" y1="10" x2="17" y2="10" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#20B2AA"/>
+                        <stop offset="100%" stop-color="#0071e3"/>
+                    </linearGradient>
+                </defs>
+            </svg>
         </div>
     </div>
 </section>
@@ -43,53 +83,6 @@
     </div>
 </section>
 
-<!-- Features Section -->
-<section class="features-section" id="features">
-    <div class="container">
-        <h2 class="section-title">Everything you need. All in one place.</h2>
-        
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">📋</div>
-                <h3>Complete Health Records</h3>
-                <p>Store conditions, medications (prescribed and non-prescribed), allergies, and assessments all in one secure location.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">🔒</div>
-                <h3>Secure & Private</h3>
-                <p>You control who has access to your information. Grant or revoke access to clinicians and family members at any time.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h3>Emergency Ready</h3>
-                <p>Critical health information accessible instantly for paramedics and emergency staff, even when you can't communicate.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <img src="{% static 'images/smiling-physiotherapist.png' %}" alt="Clinician Access" class="feature-icon-img">
-                </div>
-                <h3>Clinician Access</h3>
-                <p>Share your records with healthcare providers to reduce history-taking time and ensure accurate assessments.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">💊</div>
-                <h3>Complete Medication List</h3>
-                <p>Track all medications, including non-prescribed ones that may not appear in official medical records.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">👨‍👩‍👧</div>
-                <h3>Family Access</h3>
-                <p>Grant temporary or permanent access to family members and caregivers with your consent.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
 <!-- Benefits Section -->
 <section class="benefits-section">
     <div class="container">
@@ -97,10 +90,9 @@
             <div class="benefit-item">
                 <h3>For Patients</h3>
                 <ul>
-                    <li>Centralized health information</li>
                     <li>Control over your data</li>
                     <li>Easy sharing with clinicians</li>
-                    <li>Emergency access when needed</li>
+                    <li>Share with family</li>
                 </ul>
             </div>
             

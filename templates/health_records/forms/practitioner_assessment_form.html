@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ action|default:"Add" }} Objective Assessment - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1 class="form-title">{{ action|default:"Add" }} Objective Assessment</h1>
+            {% if user.is_authenticated and is_clinician %}
+                <a href="{% url 'clinicians:dashboard' %}" class="btn-close">✕</a>
+            {% else %}
+                <a href="{% url 'health_records:dashboard' %}" class="btn-close">✕</a>
+            {% endif %}
+        </div>
+        
+        <div class="patient-info-box">
+            <p><strong>Patient:</strong> {{ patient.get_full_name|default:patient.username }}</p>
+            {% if assessment.has_user_symptoms %}
+                <p><strong>Symptom Date:</strong> {% if assessment.symptom_date %}{{ assessment.symptom_date|date:"d M Y" }}{% else %}Not specified{% endif %}</p>
+            {% endif %}
+        </div>
+        
+        {% if assessment.has_user_symptoms %}
+            <div class="symptoms-display">
+                <h3 class="form-section-title">Patient-Reported Symptoms</h3>
+                {% if assessment.current_symptoms %}
+                    <div class="symptom-item">
+                        <strong>Current Symptoms:</strong>
+                        <p>{{ assessment.current_symptoms }}</p>
+                    </div>
+                {% endif %}
+                {% if assessment.previous_symptoms %}
+                    <div class="symptom-item">
+                        <strong>Previous Symptoms:</strong>
+                        <p>{{ assessment.previous_symptoms }}</p>
+                    </div>
+                {% endif %}
+                {% if assessment.condition_progression %}
+                    <div class="symptom-item">
+                        <strong>Condition Progression:</strong>
+                        <p>{{ assessment.condition_progression }}</p>
+                    </div>
+                {% endif %}
+                {% if assessment.pain_level is not None %}
+                    <div class="symptom-item">
+                        <strong>Pain Level:</strong>
+                        <p>{{ assessment.pain_level }}/10</p>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+        
+        <form method="post" class="form" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <h3 class="form-section-title">Objective Assessment</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.assessment_type.id_for_label }}">Assessment Type *</label>
+                    {{ form.assessment_type }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.assessment_date.id_for_label }}">Assessment Date *</label>
+                    {{ form.assessment_date }}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.completed_at.id_for_label }}">Date & Time Completed *</label>
+                {{ form.completed_at }}
+                {% if form.completed_at.errors %}
+                    <span class="field-error">{{ form.completed_at.errors.0 }}</span>
+                {% endif %}
+                <p class="form-hint">When this assessment was completed</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.objective_findings.id_for_label }}">Objective Findings *</label>
+                {{ form.objective_findings }}
+                {% if form.objective_findings.errors %}
+                    <span class="field-error">{{ form.objective_findings.errors.0 }}</span>
+                {% endif %}
+                <p class="form-hint">Clinical findings and observations from your examination</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.treatment_plan.id_for_label }}">Treatment Plan</label>
+                {{ form.treatment_plan }}
+                <p class="form-hint">Treatment plan and recommendations</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.practitioner_notes.id_for_label }}">Additional Notes</label>
+                {{ form.practitioner_notes }}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.practitioner_notes_image.id_for_label }}">Photo of Notes</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" name="{{ form.practitioner_notes_image.name }}" id="{{ form.practitioner_notes_image.id_for_label }}" class="form-file-input" accept="image/*" capture="environment">
+                    <label for="{{ form.practitioner_notes_image.id_for_label }}" class="file-upload-label">
+                        <span class="file-upload-text">📷 Take Photo or Choose Image</span>
+                    </label>
+                </div>
+                {% if assessment and assessment.practitioner_notes_image %}
+                    <div class="current-image">
+                        <p class="current-image-label">Current notes photo:</p>
+                        <img src="{{ assessment.practitioner_notes_image.url }}" alt="Practitioner Notes" class="prescription-preview">
+                        <p class="image-hint">Upload a new image to replace this one</p>
+                    </div>
+                {% endif %}
+                <p class="form-hint">You can take a photo of your notes or upload an existing image</p>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Assessment</button>
+                {% if user.is_authenticated and is_clinician %}
+                    <a href="{% url 'clinicians:dashboard' %}" class="btn btn-secondary">Cancel</a>
+                {% else %}
+                    <a href="{% url 'health_records:dashboard' %}" class="btn btn-secondary">Cancel</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

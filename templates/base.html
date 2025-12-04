@@ -1,10 +1,14 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ShareMyCare - Your Digital Health Passport{% endblock %}</title>
-    {% load static %}
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
@@ -24,20 +28,34 @@
             </button>
             <ul class="nav-menu" id="navMenu">
                 <li><a href="{% url 'health_records:home' %}" onclick="closeMobileMenu()">Home</a></li>
-                <li><a href="#features" onclick="closeMobileMenu()">Features</a></li>
+                <li><a href="#features" onclick="closeMobileMenu()">How It Works</a></li>
                 <li><a href="#about" onclick="closeMobileMenu()">About</a></li>
                 {% if user.is_authenticated %}
-                    <li><a href="{% url 'health_records:dashboard' %}" onclick="closeMobileMenu()">Dashboard</a></li>
+                    {% if is_clinician %}
+                        <li><a href="{% url 'clinicians:dashboard' %}" onclick="closeMobileMenu()">Admin</a></li>
+                    {% else %}
+                        <li><a href="{% url 'health_records:dashboard' %}" onclick="closeMobileMenu()">Dashboard</a></li>
+                    {% endif %}
                     <li><a href="{% url 'logout' %}" onclick="closeMobileMenu()">Logout</a></li>
                 {% else %}
                     <li><a href="{% url 'login' %}" onclick="closeMobileMenu()">Sign In</a></li>
-                    <li><a href="{% url 'register' %}" class="nav-button" onclick="closeMobileMenu()">Get Started</a></li>
+                    <li><a href="{% url 'register' %}" onclick="closeMobileMenu()">Get Started</a></li>
                 {% endif %}
             </ul>
         </div>
     </nav>
 
     <main>
+        {% if messages %}
+            <div class="messages-container global-messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible">
+                        {{ message }}
+                        <button type="button" class="alert-close" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 
@@ -50,7 +68,7 @@
             <div class="footer-section">
                 <h4>Product</h4>
                 <ul>
-                    <li><a href="#features">Features</a></li>
+                    <li><a href="#features">How It Works</a></li>
                     <li><a href="#about">About</a></li>
                     <li><a href="#security">Security</a></li>
                 </ul>
@@ -107,6 +125,20 @@
             if (window.innerWidth > 768) {
                 closeMobileMenu();
             }
+        });
+        
+        // Auto-hide messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert-dismissible');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-10px)';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 300);
+                }, 5000); // Hide after 5 seconds
+            });
         });
     </script>
 </body>

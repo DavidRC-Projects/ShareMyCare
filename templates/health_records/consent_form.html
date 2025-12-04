@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Consent to Share Records - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card consent-card">
+        <div class="form-header" style="flex-direction: column; align-items: flex-start; gap: var(--spacing-xs);">
+            <h1 class="form-title">Consent to Share Records</h1>
+            <p class="form-subtitle" style="margin: 0;">
+                You are about to connect with <strong>{{ clinician.full_name }}</strong> ({{ clinician.get_title_display }})
+            </p>
+            {% if clinician.organisation %}
+                <p class="form-subtitle" style="margin: 0; font-size: 0.875rem; color: var(--text-secondary);">
+                    Organisation: {{ clinician.organisation }}
+                </p>
+            {% endif %}
+        </div>
+
+        <div class="consent-notice">
+            <p><strong>Please review and select which records you would like to share with this healthcare professional.</strong></p>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                All options are selected by default. You can uncheck any records you prefer not to share. You can change these settings later from your dashboard.
+            </p>
+        </div>
+
+        <form method="post" class="form consent-form">
+            {% csrf_token %}
+            <input type="hidden" name="practitioner_code" value="{{ practitioner_code }}">
+            
+            <div class="consent-options">
+                <div class="consent-option">
+                    <label class="consent-label">
+                        <input 
+                            type="checkbox" 
+                            name="consent_medications" 
+                            {% if consent_form.consent_medications.value %}checked{% endif %}
+                            class="consent-checkbox"
+                        >
+                        <span class="consent-label-text">
+                            <strong>Medications</strong>
+                            <span class="consent-description">All medications, including prescribed and non-prescribed</span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="consent-option">
+                    <label class="consent-label">
+                        <input 
+                            type="checkbox" 
+                            name="consent_conditions" 
+                            {% if consent_form.consent_conditions.value %}checked{% endif %}
+                            class="consent-checkbox"
+                        >
+                        <span class="consent-label-text">
+                            <strong>Conditions</strong>
+                            <span class="consent-description">Medical conditions and diagnoses</span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="consent-option">
+                    <label class="consent-label">
+                        <input 
+                            type="checkbox" 
+                            name="consent_allergies" 
+                            {% if consent_form.consent_allergies.value %}checked{% endif %}
+                            class="consent-checkbox"
+                        >
+                        <span class="consent-label-text">
+                            <strong>Allergies</strong>
+                            <span class="consent-description">Allergies and adverse reactions</span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="consent-option">
+                    <label class="consent-label">
+                        <input 
+                            type="checkbox" 
+                            name="consent_symptoms" 
+                            {% if consent_form.consent_symptoms.value %}checked{% endif %}
+                            class="consent-checkbox"
+                        >
+                        <span class="consent-label-text">
+                            <strong>Symptoms & Assessments</strong>
+                            <span class="consent-description">Current symptoms, pain levels, and assessment history</span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="consent-option">
+                    <label class="consent-label">
+                        <input 
+                            type="checkbox" 
+                            name="consent_personal_info" 
+                            {% if consent_form.consent_personal_info.value %}checked{% endif %}
+                            class="consent-checkbox"
+                        >
+                        <span class="consent-label-text">
+                            <strong>Personal Information</strong>
+                            <span class="consent-description">Date of birth, phone number, and personal details</span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="consent-option">
+                    <label class="consent-label">
+                        <input 
+                            type="checkbox" 
+                            name="consent_emergency_contacts" 
+                            {% if consent_form.consent_emergency_contacts.value %}checked{% endif %}
+                            class="consent-checkbox"
+                        >
+                        <span class="consent-label-text">
+                            <strong>Emergency Contacts</strong>
+                            <span class="consent-description">Emergency contact information</span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="consent-option">
+                    <label class="consent-label">
+                        <input 
+                            type="checkbox" 
+                            name="consent_work_history" 
+                            {% if consent_form.consent_work_history.value %}checked{% endif %}
+                            class="consent-checkbox"
+                        >
+                        <span class="consent-label-text">
+                            <strong>Work History</strong>
+                            <span class="consent-description">Current and previous work history and activities</span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="consent-option">
+                    <label class="consent-label">
+                        <input 
+                            type="checkbox" 
+                            name="consent_feedback" 
+                            {% if consent_form.consent_feedback.value %}checked{% endif %}
+                            class="consent-checkbox"
+                        >
+                        <span class="consent-label-text">
+                            <strong>Healthcare Feedback</strong>
+                            <span class="consent-description">Feedback you've provided about healthcare organizations</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-actions" style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 2px solid var(--border-color);">
+                <button type="submit" name="submit_consent" class="btn btn-primary">Grant Access</button>
+                <a href="{% url 'health_records:invite_clinician' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

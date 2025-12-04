@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Revoke Clinician Access - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1 class="form-title">Revoke Clinician Access</h1>
+        </div>
+
+        <div class="revoke-warning">
+            <p><strong>Are you sure you want to revoke access for {{ clinician.full_name }}?</strong></p>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                This will immediately remove their ability to view your health records. They will no longer be able to:
+            </p>
+            <ul style="font-size: 0.875rem; color: var(--text-secondary); margin: var(--spacing-sm) 0; padding-left: var(--spacing-md);">
+                <li>View your health records</li>
+                <li>Add objective assessments</li>
+                <li>Update treatment plans</li>
+            </ul>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                <strong>Note:</strong> This action can be reversed by re-inviting the clinician later.
+            </p>
+        </div>
+
+        <div class="clinician-info-box">
+            <h3 style="margin-bottom: var(--spacing-sm);">Clinician Information</h3>
+            <div class="info-row">
+                <span class="info-label">Name:</span>
+                <span class="info-value">{{ clinician.full_name }} ({{ clinician.get_title_display }})</span>
+            </div>
+            {% if clinician.organisation %}
+                <div class="info-row">
+                    <span class="info-label">Organisation:</span>
+                    <span class="info-value">{{ clinician.organisation }}</span>
+                </div>
+            {% endif %}
+            {% if clinician.speciality %}
+                <div class="info-row">
+                    <span class="info-label">Speciality:</span>
+                    <span class="info-value">{{ clinician.speciality }}</span>
+                </div>
+            {% endif %}
+            <div class="info-row">
+                <span class="info-label">Access Level:</span>
+                <span class="info-value">{{ access.get_access_level_display }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Access Granted:</span>
+                <span class="info-value">{{ access.granted_at|date:"d M Y" }}</span>
+            </div>
+        </div>
+
+        <form method="post" class="form" style="margin-top: var(--spacing-lg);">
+            {% csrf_token %}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-danger">Yes, Revoke Access</button>
+                <a href="{% url 'health_records:dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

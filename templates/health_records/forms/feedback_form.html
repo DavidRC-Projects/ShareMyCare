@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ action }} Healthcare Feedback - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1 class="form-title">{{ action }} Healthcare Feedback</h1>
+            <a href="{% url 'health_records:dashboard' %}" class="btn-close">✕</a>
+        </div>
+        
+        <div class="feedback-info-box">
+            <p><strong>Privacy Notice:</strong></p>
+            <ul style="margin: 0.5rem 0; padding-left: 1.5rem; color: var(--text-secondary);">
+                <li>Feedback is linked to healthcare organizations, not individual HCPs</li>
+                <li>Your feedback is private and confidential</li>
+                <li>You can choose to submit anonymously</li>
+                <li>Please provide constructive and respectful feedback</li>
+            </ul>
+        </div>
+        
+        {% if access %}
+            <div class="patient-info-box">
+                <p><strong>Related to:</strong> {{ access.clinician.organisation|default:"Healthcare Provider" }}</p>
+                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                    This feedback will be linked to the organization, not the individual clinician.
+                </p>
+            </div>
+        {% endif %}
+        
+        <form method="post" class="form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.organisation.id_for_label }}">Healthcare Organization *</label>
+                {{ form.organisation }}
+                {% if form.organisation.errors %}
+                    <span class="field-error">{{ form.organisation.errors.0 }}</span>
+                {% endif %}
+                <p class="form-hint">Name of the healthcare organization (e.g., "City Hospital", "ABC Clinic")</p>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.rating.id_for_label }}">Overall Rating *</label>
+                    {{ form.rating }}
+                    {% if form.rating.errors %}
+                        <span class="field-error">{{ form.rating.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.feedback_type.id_for_label }}">Feedback Type *</label>
+                    {{ form.feedback_type }}
+                    {% if form.feedback_type.errors %}
+                        <span class="field-error">{{ form.feedback_type.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.feedback_text.id_for_label }}">Your Feedback *</label>
+                {{ form.feedback_text }}
+                {% if form.feedback_text.errors %}
+                    <span class="field-error">{{ form.feedback_text.errors.0 }}</span>
+                {% endif %}
+                <p class="form-hint">Please provide constructive and respectful feedback about your experience</p>
+            </div>
+            
+            <div class="form-group checkbox-group">
+                {{ form.is_anonymous }}
+                <label for="{{ form.is_anonymous.id_for_label }}">Submit anonymously (your name will not be shared)</label>
+            </div>
+            
+            <div class="form-group checkbox-group">
+                {{ form.is_private }}
+                <label for="{{ form.is_private.id_for_label }}">Keep feedback private (only visible to you and the organization)</label>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                <a href="{% url 'health_records:dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

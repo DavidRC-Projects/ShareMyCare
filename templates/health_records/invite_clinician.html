@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Invite Clinician - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1 class="form-title">Connect with a Healthcare Professional</h1>
+            <p class="form-subtitle">Share your health records with clinicians who care for you</p>
+        </div>
+
+        <!-- Search by Practitioner Code -->
+        <div style="margin-bottom: var(--spacing-xl); padding: var(--spacing-lg); background: var(--bg-light); border-radius: var(--radius-md); border: 2px solid var(--border-color);">
+            <h3 style="margin-bottom: var(--spacing-sm); font-size: 1.125rem;">Search by Practitioner Code</h3>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--spacing-md);">
+                If your healthcare professional has given you their 5-character code, enter it below to connect instantly.
+            </p>
+            <form method="post" class="form" style="margin: 0;">
+                {% csrf_token %}
+                <div class="form-row" style="align-items: flex-end;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="practitioner_code">Practitioner Code</label>
+                        <input 
+                            type="text" 
+                            name="practitioner_code" 
+                            id="practitioner_code" 
+                            class="form-input" 
+                            placeholder="Enter 5-character code (e.g., A1B2C)"
+                            maxlength="5"
+                            style="text-transform: uppercase; letter-spacing: 0.5rem; font-size: 1.25rem; font-weight: 600; text-align: center;"
+                            oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);"
+                        >
+                    </div>
+                    <div class="form-group" style="margin-left: var(--spacing-sm);">
+                        <button type="submit" name="search_code" class="btn btn-primary">Connect</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Divider -->
+        <div style="text-align: center; margin: var(--spacing-xl) 0; position: relative;">
+            <span style="background: var(--bg-white); padding: 0 var(--spacing-md); color: var(--text-secondary);">OR</span>
+            <hr style="position: absolute; top: 50%; left: 0; right: 0; z-index: -1; margin: 0; border: none; border-top: 1px solid var(--border-color);">
+        </div>
+
+        <!-- Invite by Email -->
+        <div style="margin-bottom: var(--spacing-lg);">
+            <h3 style="margin-bottom: var(--spacing-sm); font-size: 1.125rem;">Invite by Email</h3>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--spacing-md);">
+                Send an invitation email to a healthcare professional who isn't yet on ShareMyCare.
+            </p>
+        </div>
+
+        <form method="post" class="form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">Email Address *</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <span class="field-error">{{ form.email.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.first_name.id_for_label }}">First Name (Optional)</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <span class="field-error">{{ form.first_name.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.last_name.id_for_label }}">Last Name (Optional)</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <span class="field-error">{{ form.last_name.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.notes.id_for_label }}">Message (Optional)</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <span class="field-error">{{ form.notes.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Send Invitation</button>
+                <a href="{% url 'health_records:dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+
+        {% if invitations %}
+            <div style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 1px solid var(--border-color);">
+                <h3 style="margin-bottom: var(--spacing-md);">Previous Invitations</h3>
+                <div class="items-list">
+                    {% for invitation in invitations %}
+                        <div class="item-row">
+                            <div class="item-info">
+                                <h4>{{ invitation.email }}</h4>
+                                <p class="item-details">
+                                    Sent: {{ invitation.created_at|date:"M d, Y" }}
+                                    {% if invitation.is_accepted %}
+                                        <span class="badge badge-success">Accepted</span>
+                                    {% elif invitation.is_expired %}
+                                        <span class="badge badge-secondary">Expired</span>
+                                    {% else %}
+                                        <span class="badge badge-primary">Pending</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

@@ -19,18 +19,25 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
+from accounts import views as accounts_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('health_records.urls')),
-    # Authentication URLs - using Django's built-in views for now
+    path('clinicians/', include('clinicians.urls')),
+    # Authentication URLs - custom views (must be before allauth to take precedence)
     path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
-    # Placeholder for register - will be implemented in accounts app
-    path('accounts/register/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='register'),
+    path('accounts/logout/', auth_views.LogoutView.as_view(template_name='registration/logout.html', http_method_names=['get', 'post', 'head', 'options', 'trace']), name='logout'),
+    path('accounts/register/', accounts_views.register, name='register'),
+    # Allauth URLs (for additional features, but custom login/logout/register take precedence)
+    path("accounts/", include("allauth.urls")),
 ]
 
 # Serve static and media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Error handlers
+handler404 = 'sharemycare.views.handler404'
+handler500 = 'sharemycare.views.handler500'

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Clinician Signup - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h1 class="auth-title">Create Your Account</h1>
+        <p class="auth-subtitle">
+            You've been invited by <strong>{{ invitation.patient.get_full_name|default:invitation.patient.username }}</strong><br>
+            to access their health records on ShareMyCare.
+        </p>
+        
+        {% if invitation.notes %}
+            <div style="background: var(--bg-light); padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-lg);">
+                <p style="margin: 0; font-style: italic;">"{{ invitation.notes }}"</p>
+            </div>
+        {% endif %}
+
+        {% if messages %}
+            <div class="auth-error">
+                <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            <div class="auth-form-group">
+                <label for="username">Username *</label>
+                <input type="text" name="username" id="username" required autofocus class="form-input" value="{{ form_data.username|default:'' }}">
+                {% if form_errors.username %}
+                    <span class="field-error">{{ form_errors.username }}</span>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                <label for="first_name">First Name</label>
+                <input type="text" name="first_name" id="first_name" class="form-input" value="{{ form_data.first_name|default:invitation.first_name }}">
+            </div>
+
+            <div class="auth-form-group">
+                <label for="last_name">Last Name</label>
+                <input type="text" name="last_name" id="last_name" class="form-input" value="{{ form_data.last_name|default:invitation.last_name }}">
+            </div>
+
+            <div class="auth-form-group">
+                <label for="password1">Password *</label>
+                <input type="password" name="password1" id="password1" required class="form-input">
+                {% if form_errors.password1 %}
+                    <span class="field-error">{{ form_errors.password1 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="auth-form-group">
+                <label for="password2">Confirm Password *</label>
+                <input type="password" name="password2" id="password2" required class="form-input">
+                {% if form_errors.password2 %}
+                    <span class="field-error">{{ form_errors.password2 }}</span>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create Account & Access Records</button>
+        </form>
+
+        <div class="auth-footer">
+            <p style="font-size: 0.875rem; color: var(--text-secondary);">
+                By creating an account, you agree to maintain patient confidentiality and use this information only for healthcare purposes.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,488 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ objective_measures|yesno:"Edit,Add" }} Objective Measures - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card" style="max-width: 1000px;">
+        <div class="form-header">
+            <h1 class="form-title">{{ objective_measures|yesno:"Edit,Add" }} Objective Assessment</h1>
+            <a href="{% url 'clinicians:dashboard' %}" class="btn-close">✕</a>
+        </div>
+        
+        <div class="patient-info-box">
+            <p><strong>Patient:</strong> {{ patient.get_full_name|default:patient.username }}</p>
+            {% if assessment.has_user_symptoms %}
+                <p><strong>Symptom Date:</strong> {% if assessment.symptom_date %}{{ assessment.symptom_date|date:"d M Y" }}{% else %}Not specified{% endif %}</p>
+            {% endif %}
+        </div>
+
+        <form method="post" class="form" id="objectiveMeasuresForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.assessment_date.id_for_label }}">Assessment Date *</label>
+                {{ form.assessment_date }}
+                {% if form.assessment_date.errors %}
+                    <span class="field-error">{{ form.assessment_date.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Range of Motion (ROM) Section -->
+            <div class="form-section">
+                <h3 class="form-section-title">Range of Motion (ROM)</h3>
+                
+                <div class="assessment-table-wrapper">
+                    <table class="assessment-table">
+                        <thead>
+                            <tr>
+                                <th>Joint</th>
+                                <th>Movement</th>
+                                <th>ROM</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Shoulder -->
+                            <tr>
+                                <td rowspan="3" class="joint-name">Shoulder</td>
+                                <td>
+                                    <select name="shoulder_movement_left" class="form-select movement-select" data-joint="shoulder" data-side="left">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                        <option value="abduction">Abduction</option>
+                                        <option value="adduction">Adduction</option>
+                                        <option value="external_rotation">External Rotation</option>
+                                        <option value="internal_rotation">Internal Rotation</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="rom-input-wrapper">
+                                        {{ form.shoulder_rom_left }}
+                                        <input type="text" name="shoulder_rom_left_free" class="form-input free-text-input" placeholder="Enter ROM value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <select name="shoulder_movement_right" class="form-select movement-select" data-joint="shoulder" data-side="right">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                        <option value="abduction">Abduction</option>
+                                        <option value="adduction">Adduction</option>
+                                        <option value="external_rotation">External Rotation</option>
+                                        <option value="internal_rotation">Internal Rotation</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="rom-input-wrapper">
+                                        {{ form.shoulder_rom_right }}
+                                        <input type="text" name="shoulder_rom_right_free" class="form-input free-text-input" placeholder="Enter ROM value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                            <!-- Elbow -->
+                            <tr>
+                                <td rowspan="2" class="joint-name">Elbow</td>
+                                <td>
+                                    <select name="elbow_movement_left" class="form-select movement-select" data-joint="elbow" data-side="left">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="rom-input-wrapper">
+                                        {{ form.elbow_rom_left }}
+                                        <input type="text" name="elbow_rom_left_free" class="form-input free-text-input" placeholder="Enter ROM value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <select name="elbow_movement_right" class="form-select movement-select" data-joint="elbow" data-side="right">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="rom-input-wrapper">
+                                        {{ form.elbow_rom_right }}
+                                        <input type="text" name="elbow_rom_right_free" class="form-input free-text-input" placeholder="Enter ROM value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                            <!-- Hip -->
+                            <tr>
+                                <td rowspan="2" class="joint-name">Hip</td>
+                                <td>
+                                    <select name="hip_movement_left" class="form-select movement-select" data-joint="hip" data-side="left">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                        <option value="abduction">Abduction</option>
+                                        <option value="adduction">Adduction</option>
+                                        <option value="external_rotation">External Rotation</option>
+                                        <option value="internal_rotation">Internal Rotation</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="rom-input-wrapper">
+                                        {{ form.hip_rom_left }}
+                                        <input type="text" name="hip_rom_left_free" class="form-input free-text-input" placeholder="Enter ROM value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <select name="hip_movement_right" class="form-select movement-select" data-joint="hip" data-side="right">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                        <option value="abduction">Abduction</option>
+                                        <option value="adduction">Adduction</option>
+                                        <option value="external_rotation">External Rotation</option>
+                                        <option value="internal_rotation">Internal Rotation</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="rom-input-wrapper">
+                                        {{ form.hip_rom_right }}
+                                        <input type="text" name="hip_rom_right_free" class="form-input free-text-input" placeholder="Enter ROM value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                            <!-- Knee -->
+                            <tr>
+                                <td rowspan="2" class="joint-name">Knee</td>
+                                <td>
+                                    <select name="knee_movement_left" class="form-select movement-select" data-joint="knee" data-side="left">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="rom-input-wrapper">
+                                        {{ form.knee_rom_left }}
+                                        <input type="text" name="knee_rom_left_free" class="form-input free-text-input" placeholder="Enter ROM value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <select name="knee_movement_right" class="form-select movement-select" data-joint="knee" data-side="right">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="rom-input-wrapper">
+                                        {{ form.knee_rom_right }}
+                                        <input type="text" name="knee_rom_right_free" class="form-input free-text-input" placeholder="Enter ROM value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Power Section -->
+            <div class="form-section">
+                <h3 class="form-section-title">Power</h3>
+                
+                <div class="assessment-table-wrapper">
+                    <table class="assessment-table">
+                        <thead>
+                            <tr>
+                                <th>Joint</th>
+                                <th>Movement</th>
+                                <th>Power</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Shoulder -->
+                            <tr>
+                                <td rowspan="2" class="joint-name">Shoulder</td>
+                                <td>
+                                    <select name="shoulder_power_movement_left" class="form-select movement-select" data-joint="shoulder" data-side="left" data-type="power">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                        <option value="abduction">Abduction</option>
+                                        <option value="adduction">Adduction</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="power-input-wrapper">
+                                        {{ form.shoulder_power_left }}
+                                        <input type="text" name="shoulder_power_left_free" class="form-input free-text-input" placeholder="Enter power value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <select name="shoulder_power_movement_right" class="form-select movement-select" data-joint="shoulder" data-side="right" data-type="power">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                        <option value="abduction">Abduction</option>
+                                        <option value="adduction">Adduction</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="power-input-wrapper">
+                                        {{ form.shoulder_power_right }}
+                                        <input type="text" name="shoulder_power_right_free" class="form-input free-text-input" placeholder="Enter power value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                            <!-- Elbow -->
+                            <tr>
+                                <td rowspan="2" class="joint-name">Elbow</td>
+                                <td>
+                                    <select name="elbow_power_movement_left" class="form-select movement-select" data-joint="elbow" data-side="left" data-type="power">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="power-input-wrapper">
+                                        {{ form.elbow_power_left }}
+                                        <input type="text" name="elbow_power_left_free" class="form-input free-text-input" placeholder="Enter power value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <select name="elbow_power_movement_right" class="form-select movement-select" data-joint="elbow" data-side="right" data-type="power">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="power-input-wrapper">
+                                        {{ form.elbow_power_right }}
+                                        <input type="text" name="elbow_power_right_free" class="form-input free-text-input" placeholder="Enter power value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                            <!-- Hip -->
+                            <tr>
+                                <td rowspan="2" class="joint-name">Hip</td>
+                                <td>
+                                    <select name="hip_power_movement_left" class="form-select movement-select" data-joint="hip" data-side="left" data-type="power">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                        <option value="abduction">Abduction</option>
+                                        <option value="adduction">Adduction</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="power-input-wrapper">
+                                        {{ form.hip_power_left }}
+                                        <input type="text" name="hip_power_left_free" class="form-input free-text-input" placeholder="Enter power value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <select name="hip_power_movement_right" class="form-select movement-select" data-joint="hip" data-side="right" data-type="power">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                        <option value="abduction">Abduction</option>
+                                        <option value="adduction">Adduction</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="power-input-wrapper">
+                                        {{ form.hip_power_right }}
+                                        <input type="text" name="hip_power_right_free" class="form-input free-text-input" placeholder="Enter power value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                            <!-- Knee -->
+                            <tr>
+                                <td rowspan="2" class="joint-name">Knee</td>
+                                <td>
+                                    <select name="knee_power_movement_left" class="form-select movement-select" data-joint="knee" data-side="left" data-type="power">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="power-input-wrapper">
+                                        {{ form.knee_power_left }}
+                                        <input type="text" name="knee_power_left_free" class="form-input free-text-input" placeholder="Enter power value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <select name="knee_power_movement_right" class="form-select movement-select" data-joint="knee" data-side="right" data-type="power">
+                                        <option value="flexion">Flexion</option>
+                                        <option value="extension">Extension</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="power-input-wrapper">
+                                        {{ form.knee_power_right }}
+                                        <input type="text" name="knee_power_right_free" class="form-input free-text-input" placeholder="Enter power value" style="display: none;">
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Additional Notes -->
+            <div class="form-section">
+                <h3 class="form-section-title">Additional Notes</h3>
+                <div class="form-group">
+                    <label for="{{ form.additional_notes.id_for_label }}">Additional Objective Findings</label>
+                    {{ form.additional_notes }}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Objective Measures</button>
+                <a href="{% url 'clinicians:dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.assessment-table-wrapper {
+    overflow-x: auto;
+    margin: var(--spacing-md) 0;
+}
+
+.assessment-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.assessment-table thead {
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.1) 0%, rgba(32, 178, 170, 0.1) 100%);
+}
+
+.assessment-table th {
+    padding: var(--spacing-md);
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.assessment-table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.assessment-table tbody tr:hover {
+    background: var(--bg-light);
+}
+
+.assessment-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.joint-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--bg-light);
+}
+
+.rom-input-wrapper,
+.power-input-wrapper {
+    position: relative;
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.free-text-input {
+    flex: 1;
+}
+
+.movement-select {
+    min-width: 150px;
+}
+
+.form-select {
+    min-width: 200px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle free text option in ROM/Power dropdowns
+    document.querySelectorAll('.form-select').forEach(function(select) {
+        const wrapper = select.closest('.rom-input-wrapper, .power-input-wrapper');
+        const freeTextInput = wrapper ? wrapper.querySelector('.free-text-input') : null;
+        
+        // Check if current value is not in the dropdown options (meaning it's free text)
+        const currentValue = select.value;
+        const isFreeText = currentValue && !Array.from(select.options).some(opt => opt.value === currentValue);
+        
+        if (isFreeText && freeTextInput) {
+            // Value is free text - show input, hide dropdown, set value
+            select.value = 'free_text';
+            select.style.display = 'none';
+            freeTextInput.style.display = 'block';
+            freeTextInput.value = currentValue;
+            freeTextInput.required = true;
+        }
+        
+        select.addEventListener('change', function() {
+            if (this.value === 'free_text') {
+                // Show free text input, hide dropdown
+                if (wrapper) {
+                    this.style.display = 'none';
+                    if (freeTextInput) {
+                        freeTextInput.style.display = 'block';
+                        freeTextInput.required = true;
+                        freeTextInput.focus();
+                    }
+                }
+            } else {
+                // Show dropdown, hide free text input
+                if (wrapper) {
+                    this.style.display = 'block';
+                    if (freeTextInput) {
+                        freeTextInput.style.display = 'none';
+                        freeTextInput.required = false;
+                        if (this.value !== 'free_text') {
+                            freeTextInput.value = '';
+                        }
+                    }
+                }
+            }
+        });
+    });
+    
+    // Handle form submission - ensure free text values are properly set
+    document.getElementById('objectiveMeasuresForm').addEventListener('submit', function(e) {
+        // When free_text is selected, copy the free text input value to a hidden field
+        // The backend will handle this via POST data
+        document.querySelectorAll('.form-select').forEach(function(select) {
+            if (select.value === 'free_text') {
+                const wrapper = select.closest('.rom-input-wrapper, .power-input-wrapper');
+                const freeTextInput = wrapper ? wrapper.querySelector('.free-text-input') : null;
+                if (freeTextInput && freeTextInput.value) {
+                    // The value will be read from the _free field in the backend
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+

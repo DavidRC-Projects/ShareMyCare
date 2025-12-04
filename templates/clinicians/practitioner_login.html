@@ -1,28 +1,25 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Sign In - ShareMyCare{% endblock %}
+{% block title %}Practitioner Login - ShareMyCare{% endblock %}
 
 {% block content %}
 <div class="auth-container">
     <div class="auth-card">
-        <h1 class="auth-title">Sign In</h1>
-        <p class="auth-subtitle">Welcome back to ShareMyCare</p>
+        <h1 class="auth-title">Practitioner Login</h1>
+        <p class="auth-subtitle">Healthcare professional access</p>
         
-        {% if form.errors %}
+        {% if messages %}
             <div class="auth-error">
-                <p>Please correct the errors below:</p>
                 <ul>
-                    {% for field, errors in form.errors.items %}
-                        {% for error in errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
                     {% endfor %}
                 </ul>
             </div>
         {% endif %}
         
-        <form method="post" class="auth-form">
+        <form method="post" class="auth-form" action="{% url 'clinicians:practitioner_login' %}">
             {% csrf_token %}
             <div class="auth-form-group">
                 <label for="id_username">Username</label>
@@ -36,10 +33,8 @@
         </form>
         
         <div class="auth-footer">
-            Don't have an account? <a href="{% url 'register' %}">Get Started</a>
-        </div>
-        <div class="auth-footer" style="margin-top: 1rem; padding-top: 1rem;">
-            <a href="{% url 'clinicians:practitioner_login' %}" class="btn btn-primary">Healthcare Professional login</a>
+            <a href="{% url 'login' %}">Patient Login</a> • 
+            <a href="{% url 'health_records:home' %}">Back to Home</a>
         </div>
     </div>
 </div>

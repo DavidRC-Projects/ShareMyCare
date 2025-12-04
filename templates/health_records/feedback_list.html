@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Healthcare Feedback - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">My Healthcare Feedback</h1>
+        <p class="dashboard-subtitle">Your private feedback about healthcare organizations</p>
+    </div>
+
+    {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible">
+                    {{ message }}
+                    <button type="button" class="alert-close" onclick="this.parentElement.remove()">×</button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div style="margin-bottom: var(--spacing-md);">
+        <a href="{% url 'health_records:add_feedback' %}" class="btn btn-primary">Add New Feedback</a>
+        <a href="{% url 'health_records:dashboard' %}" class="btn btn-secondary" style="margin-left: var(--spacing-xs);">Back to Dashboard</a>
+    </div>
+
+    {% if feedback %}
+        <div class="dashboard-grid">
+            {% for item in feedback %}
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon-emoji">💬</div>
+                            <div>
+                                <h2 class="card-title">{{ item.organisation }}</h2>
+                                <p class="card-count">{{ item.created_at|date:"d M Y" }}</p>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <a href="{% url 'health_records:delete_feedback' item.pk %}" class="btn-icon btn-icon-danger" title="Delete">🗑️</a>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <strong>Rating:</strong>
+                                <span class="badge badge-rating-{{ item.rating }}">⭐ {{ item.rating }}/5</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Type:</strong> {{ item.get_feedback_type_display }}
+                            </div>
+                            {% if item.is_anonymous %}
+                                <div class="info-item">
+                                    <strong>Status:</strong> <span class="badge badge-info">Anonymous</span>
+                                </div>
+                            {% endif %}
+                            {% if item.is_private %}
+                                <div class="info-item">
+                                    <strong>Privacy:</strong> <span class="badge badge-info">Private</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div style="margin-top: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--border-color);">
+                            <strong>Feedback:</strong>
+                            <p style="margin-top: 0.5rem; color: var(--text-secondary); line-height: 1.6;">{{ item.feedback_text }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="dashboard-card">
+            <div class="empty-state">
+                <p>No feedback submitted yet.</p>
+                <a href="{% url 'health_records:add_feedback' %}" class="btn btn-primary">Submit Your First Feedback</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
