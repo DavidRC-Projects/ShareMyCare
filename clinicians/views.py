@@ -589,7 +589,12 @@ def create_assessment(request, patient_id):
     is_physiotherapist = clinician.title == 'physiotherapist'
     
     if request.method == 'POST':
-        from health_records.forms import PractitionerAssessmentForm
+        from health_records.azure_doc_intelligence import AzureDocumentIntelligenceService
+        from health_records.models import ExtractedFindings
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
         form = PractitionerAssessmentForm(request.POST, request.FILES, clinician=clinician)
         if form.is_valid():
             assessment = form.save(commit=False)
@@ -603,19 +608,78 @@ def create_assessment(request, patient_id):
                 assessment.completed_at = timezone.now()
             assessment.save()
             
+            # Check if an image was uploaded and process it automatically
+            image_uploaded = assessment.practitioner_notes_image
+            if image_uploaded:
+                messages.success(request, 'Assessment created successfully! Image uploaded. Processing with document intelligence...')
+                
+                # Initialize Azure Document Intelligence service
+                doc_service = AzureDocumentIntelligenceService()
+                
+                if doc_service.is_configured():
+                    try:
+                        # Get the full path to the image
+                        image_path = assessment.practitioner_notes_image.path
+                        
+                        # Process the document
+                        extracted_data = doc_service.analyze_document(image_path)
+                        
+                        if extracted_data:
+                            # Delete existing extracted findings for this assessment (if any)
+                            ExtractedFindings.objects.filter(assessment=assessment).delete()
+                            
+                            # Create ExtractedFindings records
+                            findings_created = 0
+                            for finding_data in extracted_data.get('findings', []):
+                                finding = ExtractedFindings.objects.create(
+                                    assessment=assessment,
+                                    category=finding_data.get('category', 'general'),
+                                    finding_type=finding_data.get('type', 'observation'),
+                                    text=finding_data.get('text', ''),
+                                    raw_extraction_data=extracted_data,
+                                )
+                                findings_created += 1
+                            
+                            if findings_created > 0:
+                                messages.success(
+                                    request,
+                                    f'Successfully extracted {findings_created} findings from the notes image!'
+                                )
+                                # Redirect to view findings
+                                # Check if user wants to add objective measures first
+                                if is_physiotherapist and request.POST.get('add_objective_measures'):
+                                    messages.info(request, 'You can view extracted findings after adding objective measures.')
+                                    return redirect('clinicians:add_objective_measures', assessment_pk=assessment.pk)
+                                return redirect('health_records:view_extracted_findings', assessment_pk=assessment.pk)
+                            else:
+                                messages.info(request, 'Image processed but no findings were extracted. You can view the raw text in the assessment details.')
+                        else:
+                            messages.warning(request, 'Image uploaded but document intelligence processing failed. You can try processing it manually later.')
+                    except Exception as e:
+                        error_msg = str(e)
+                        logger.error(f"Error processing notes image automatically: {error_msg}")
+                        logger.exception("Full traceback:")
+                        messages.error(
+                            request,
+                            f'Error processing image: {error_msg}. Please check the image format (JPEG, PNG, PDF supported) and try again.'
+                        )
+                else:
+                    messages.info(request, 'Image uploaded successfully. Document intelligence is not configured, so the image was not processed automatically.')
+            
             # Check if user wants to add objective measures
             if is_physiotherapist and request.POST.get('add_objective_measures'):
-                messages.success(request, 'Assessment saved. Now add detailed objective measures.')
+                if not image_uploaded:
+                    messages.success(request, 'Assessment saved. Now add detailed objective measures.')
                 return redirect('clinicians:add_objective_measures', assessment_pk=assessment.pk)
             
-            messages.success(request, 'Assessment created successfully!')
+            if not image_uploaded:
+                messages.success(request, 'Assessment created successfully!')
             
             # For physiotherapists, redirect to dashboard (they can add objective measures later)
             if is_physiotherapist:
                 return redirect('clinicians:dashboard')
             return redirect('clinicians:dashboard')
     else:
-        from health_records.forms import PractitionerAssessmentForm
         form = PractitionerAssessmentForm(clinician=clinician)
         # Pre-fill completed_at with current date/time
         form.fields['completed_at'].initial = timezone.now()

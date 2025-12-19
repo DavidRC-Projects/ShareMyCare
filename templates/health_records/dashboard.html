@@ -270,9 +270,9 @@
                                             {% if assessment.practitioner_notes_image %}
                                                 <span class="prescription-badge" title="Practitioner notes photo available">📷</span>
                                                 {% if assessment.extracted_findings.exists %}
-                                                    <a href="{% url 'health_records:view_extracted_findings' assessment.pk %}" class="badge badge-info" title="View extracted findings">📋 Findings</a>
+                                                    <button type="button" class="badge badge-info" title="View extracted findings" onclick="showFindingsModal({{ assessment.pk }})">📋 Findings</button>
                                                 {% else %}
-                                                    <a href="{% url 'health_records:process_notes_image' assessment.pk %}" class="badge badge-primary" title="Extract findings from notes">🔍 Extract</a>
+                                                    <button type="button" class="badge badge-primary" title="Extract findings from notes" onclick="extractAndShowFindings({{ assessment.pk }})">🔍 Extract</button>
                                                 {% endif %}
                                             {% endif %}
                                         </div>
@@ -903,7 +903,262 @@ function closeAssessmentModal() {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeAssessmentModal();
+        closeFindingsModal();
     }
 });
+
+// Findings Modal Functions
+function showFindingsModal(assessmentId) {
+    const modal = document.getElementById('findingsModal');
+    const modalContent = document.getElementById('findingsModalContent');
+    
+    // Show loading state
+    modalContent.innerHTML = '<div style="text-align: center; padding: 2rem;"><p>Loading findings...</p></div>';
+    modal.style.display = 'block';
+    
+    // Fetch findings via AJAX
+    fetch(`/assessments/${assessmentId}/findings/json/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                modalContent.innerHTML = `<div style="text-align: center; padding: 2rem;"><p style="color: red;">${data.error}</p></div>`;
+                return;
+            }
+            
+            // Build findings HTML
+            let html = `
+                <div class="findings-modal-header">
+                    <h2>Extracted Findings</h2>
+                    <span class="badge badge-primary">${data.findings_count} finding${data.findings_count !== 1 ? 's' : ''}</span>
+                </div>
+                <div class="findings-modal-body">
+                    <div class="findings-info">
+                        <p><strong>Assessment Date:</strong> ${data.assessment_date}</p>
+                    </div>
+            `;
+            
+            if (data.findings_count === 0) {
+                html += '<div class="empty-state"><p>No findings have been extracted yet.</p></div>';
+            } else {
+                for (const [category, findings] of Object.entries(data.findings_by_category)) {
+                    html += `
+                        <div class="findings-category">
+                            <h3 class="category-title">${category}</h3>
+                            <div class="table-responsive">
+                                <table class="findings-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Finding</th>
+                                            <th>Extracted</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+                    
+                    findings.forEach(finding => {
+                        html += `
+                            <tr class="${finding.is_verified ? 'finding-verified' : ''}">
+                                <td>
+                                    <span class="finding-type-badge finding-type-${finding.type_class}">
+                                        ${finding.type}
+                                    </span>
+                                </td>
+                                <td class="finding-text">${finding.text}</td>
+                                <td class="finding-date">${finding.extracted_at}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            html += '</div>';
+            modalContent.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error fetching findings:', error);
+            modalContent.innerHTML = '<div style="text-align: center; padding: 2rem;"><p style="color: red;">Error loading findings. Please try again.</p></div>';
+        });
+}
+
+function extractAndShowFindings(assessmentId) {
+    const modal = document.getElementById('findingsModal');
+    const modalContent = document.getElementById('findingsModalContent');
+    
+    // Show processing state
+    modalContent.innerHTML = '<div style="text-align: center; padding: 2rem;"><p>Processing image and extracting findings... This may take a moment.</p><div class="spinner"></div></div>';
+    modal.style.display = 'block';
+    
+    // Process the image first via AJAX
+    fetch(`/assessments/${assessmentId}/process-notes/`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        credentials: 'same-origin'
+    })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Failed to process image');
+                });
+            }
+        })
+        .then(data => {
+            if (data.success) {
+                // Successfully processed, now fetch and show findings
+                setTimeout(() => {
+                    showFindingsModal(assessmentId);
+                }, 1000);
+            } else {
+                throw new Error(data.error || 'Processing failed');
+            }
+        })
+        .catch(error => {
+            console.error('Error processing image:', error);
+            modalContent.innerHTML = `<div style="text-align: center; padding: 2rem;"><p style="color: red;">Error: ${error.message}</p><p>Please try again or check the image format.</p></div>`;
+        });
+}
+
+function closeFindingsModal() {
+    document.getElementById('findingsModal').style.display = 'none';
+}
 </script>
+
+<!-- Findings Modal -->
+<div id="findingsModal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeFindingsModal()"></div>
+    <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header">
+            <h2>Extracted Findings</h2>
+            <button type="button" class="modal-close" onclick="closeFindingsModal()">✕</button>
+        </div>
+        <div id="findingsModalContent" class="modal-body">
+            <!-- Content loaded via AJAX -->
+        </div>
+    </div>
+</div>
+
+<style>
+.findings-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.findings-modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.findings-info {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
+
+.findings-category {
+    margin-bottom: 2rem;
+}
+
+.category-title {
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.findings-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.findings-table th,
+.findings-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.findings-table th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+    color: #333;
+}
+
+.findings-table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+.finding-verified {
+    background-color: #f0f9ff;
+}
+
+.finding-text {
+    max-width: 500px;
+    word-wrap: break-word;
+}
+
+.finding-type-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.finding-type-measurement {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.finding-type-strength {
+    background-color: #fff3e0;
+    color: #f57c00;
+}
+
+.finding-type-symptom {
+    background-color: #fce4ec;
+    color: #c2185b;
+}
+
+.finding-type-treatment {
+    background-color: #e8f5e9;
+    color: #388e3c;
+}
+
+.finding-type-observation {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #20B2AA;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 1rem auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
 {% endblock %}

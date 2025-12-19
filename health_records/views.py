@@ -693,7 +693,17 @@ def process_notes_image(request, assessment_pk):
         extracted_data = doc_service.analyze_document(image_path)
         
         if not extracted_data:
-            messages.error(request, 'Failed to extract data from the notes image.')
+            error_msg = 'Failed to extract data from the notes image.'
+            messages.error(request, error_msg)
+            
+            # If AJAX request, return JSON
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                from django.http import JsonResponse
+                return JsonResponse({
+                    'success': False,
+                    'error': error_msg
+                }, status=400)
+            
             if is_clinician:
                 return redirect('clinicians:dashboard')
             return redirect('health_records:dashboard')
@@ -718,17 +728,35 @@ def process_notes_image(request, assessment_pk):
             f'Successfully extracted {findings_created} findings from the notes image!'
         )
         
+        # If AJAX request, return JSON
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            from django.http import JsonResponse
+            return JsonResponse({
+                'success': True,
+                'findings_count': findings_created,
+                'message': f'Successfully extracted {findings_created} findings from the notes image!'
+            })
+        
         # Redirect to view findings
         return redirect('health_records:view_extracted_findings', assessment_pk=assessment.pk)
         
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
-        logger.error(f"Error processing notes image: {e}")
-        messages.error(
-            request,
-            f'An error occurred while processing the image: {str(e)}'
-        )
+        error_msg = str(e)
+        logger.error(f"Error processing notes image: {error_msg}")
+        logger.exception("Full traceback:")
+        error_message = f'Error processing image: {error_msg}. Please check the image format (JPEG, PNG, PDF supported) and try again.'
+        messages.error(request, error_message)
+        
+        # If AJAX request, return JSON
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            from django.http import JsonResponse
+            return JsonResponse({
+                'success': False,
+                'error': error_message
+            }, status=500)
+        
         if is_clinician:
             return redirect('clinicians:dashboard')
         return redirect('health_records:dashboard')
@@ -778,6 +806,58 @@ def view_extracted_findings(request, assessment_pk):
     }
     
     return render(request, 'health_records/extracted_findings.html', context)
+
+
+@login_required
+def get_extracted_findings_json(request, assessment_pk):
+    """Get extracted findings as JSON for modal display"""
+    from django.http import JsonResponse
+    assessment = get_object_or_404(Assessment, pk=assessment_pk)
+    
+    # Check permissions
+    is_owner = assessment.user == request.user
+    is_clinician = False
+    
+    if hasattr(request.user, 'clinician_profile'):
+        clinician = request.user.clinician_profile
+        has_access = PatientClinicianAccess.objects.filter(
+            patient=assessment.user,
+            clinician=clinician,
+            is_active=True
+        ).exists()
+        is_clinician = has_access
+    
+    if not (is_owner or is_clinician):
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+    
+    # Get extracted findings grouped by category
+    findings = ExtractedFindings.objects.filter(assessment=assessment).order_by('category', 'extracted_at')
+    
+    # Group findings by category
+    findings_by_category = {}
+    for finding in findings:
+        category = finding.get_category_display()
+        if category not in findings_by_category:
+            findings_by_category[category] = []
+        findings_by_category[category].append({
+            'id': finding.pk,
+            'type': finding.get_finding_type_display(),
+            'type_class': finding.finding_type,
+            'text': finding.text,
+            'extracted_at': finding.extracted_at.strftime('%b %d, %Y %H:%M'),
+            'is_verified': finding.is_verified,
+            'verified_by': finding.verified_by.full_name if finding.verified_by else None,
+        })
+    
+    return JsonResponse({
+        'assessment_id': assessment.pk,
+        'assessment_date': assessment.assessment_date.strftime('%B %d, %Y') if assessment.assessment_date else 'N/A',
+        'has_image': bool(assessment.practitioner_notes_image),
+        'image_url': assessment.practitioner_notes_image.url if assessment.practitioner_notes_image else None,
+        'findings_count': findings.count(),
+        'findings_by_category': findings_by_category,
+        'is_clinician': is_clinician,
+    })
 
 
 @login_required

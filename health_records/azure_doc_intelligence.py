@@ -55,11 +55,19 @@ class AzureDocumentIntelligenceService:
             with open(file_path, 'rb') as f:
                 file_content = f.read()
             
+            # Check file size (Azure has limits)
+            file_size_mb = len(file_content) / (1024 * 1024)
+            if file_size_mb > 500:  # Azure limit is 500MB
+                logger.error(f"File too large: {file_size_mb:.2f}MB (max 500MB)")
+                raise ValueError(f"File too large: {file_size_mb:.2f}MB. Maximum size is 500MB.")
+            
+            logger.info(f"Analyzing document: {file_path} ({file_size_mb:.2f}MB)")
+            
             # Use the general document model to extract text and structure
+            # The API expects 'body' parameter with the file content
             poller = self.client.begin_analyze_document(
                 model_id="prebuilt-layout",
-                analyze_request=file_content,
-                content_type="application/octet-stream"
+                body=file_content
             )
             
             result = poller.result()
@@ -114,14 +122,21 @@ class AzureDocumentIntelligenceService:
                             'value': value
                         })
             
+            logger.info(f"Extracted {len(extracted_data['raw_text'])} characters of text")
+            
             # Parse findings from the text (look for common medical note patterns)
             extracted_data['findings'] = self._parse_findings(extracted_data['raw_text'])
+            logger.info(f"Parsed {len(extracted_data['findings'])} findings from document")
             
             return extracted_data
             
         except Exception as e:
-            logger.error(f"Error analyzing document: {e}")
-            return None
+            error_msg = str(e)
+            error_type = type(e).__name__
+            logger.error(f"Error analyzing document ({error_type}): {error_msg}")
+            logger.exception("Full traceback:")
+            # Return error details for better debugging
+            raise Exception(f"Azure Document Intelligence error ({error_type}): {error_msg}")
     
     def _parse_findings(self, text: str) -> List[Dict]:
         """
