@@ -48,5 +48,11 @@ urlpatterns = [
     # Clinician Invitation URLs
     path('clinicians/invite/', views.invite_clinician, name='invite_clinician'),
     path('clinicians/revoke/<int:access_pk>/', views.revoke_clinician_access, name='revoke_clinician_access'),
+    
+    # Azure Document Intelligence URLs
+    path('assessments/<int:assessment_pk>/process-notes/', views.process_notes_image, name='process_notes_image'),
+    path('assessments/<int:assessment_pk>/findings/', views.view_extracted_findings, name='view_extracted_findings'),
+    path('findings/<int:finding_pk>/verify/', views.verify_finding, name='verify_finding'),
+    path('findings/<int:finding_pk>/delete/', views.delete_finding, name='delete_finding'),
 ]
 

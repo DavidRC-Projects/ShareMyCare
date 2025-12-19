@@ -40,7 +40,10 @@
                     <tbody>
                         <!-- ANKLE -->
                         <tr class="joint-section-header">
-                            <td colspan="5"><strong>ANKLE</strong></td>
+                            <td colspan="4"><strong>ANKLE</strong></td>
+                            <td style="text-align: right;">
+                                <button type="button" class="btn-fill-normal" onclick="fillJointNormal('ankle', this)">Fill as Normal</button>
+                            </td>
                         </tr>
                         <tr class="column-headers">
                             <td style="width: 25%;">Movement</td>
@@ -250,7 +253,10 @@
 
                         <!-- KNEE -->
                         <tr class="joint-section-header">
-                            <td colspan="5"><strong>KNEE</strong></td>
+                            <td colspan="4"><strong>KNEE</strong></td>
+                            <td style="text-align: right;">
+                                <button type="button" class="btn-fill-normal" onclick="fillJointNormal('knee', this)">Fill as Normal</button>
+                            </td>
                         </tr>
                         <tr class="column-headers">
                             <td>Movement</td>
@@ -360,7 +366,10 @@
 
                         <!-- HIP -->
                         <tr class="joint-section-header">
-                            <td colspan="5"><strong>HIP</strong></td>
+                            <td colspan="4"><strong>HIP</strong></td>
+                            <td style="text-align: right;">
+                                <button type="button" class="btn-fill-normal" onclick="fillJointNormal('hip', this)">Fill as Normal</button>
+                            </td>
                         </tr>
                         <tr class="column-headers">
                             <td>Movement</td>
@@ -672,7 +681,10 @@
 
                         <!-- LOWER BACK -->
                         <tr class="joint-section-header">
-                            <td colspan="5"><strong>LOWER BACK (Lumbar)</strong></td>
+                            <td colspan="4"><strong>LOWER BACK (Lumbar)</strong></td>
+                            <td style="text-align: right;">
+                                <button type="button" class="btn-fill-normal" onclick="fillJointNormal('lumbar', this)">Fill as Normal</button>
+                            </td>
                         </tr>
                         <tr class="column-headers">
                             <td>Movement</td>
@@ -840,7 +852,10 @@
 
                         <!-- NECK -->
                         <tr class="joint-section-header">
-                            <td colspan="5"><strong>NECK (Cervical)</strong></td>
+                            <td colspan="4"><strong>NECK (Cervical)</strong></td>
+                            <td style="text-align: right;">
+                                <button type="button" class="btn-fill-normal" onclick="fillJointNormal('cervical', this)">Fill as Normal</button>
+                            </td>
                         </tr>
                         <tr class="column-headers">
                             <td>Movement</td>
@@ -1008,7 +1023,10 @@
 
                         <!-- SHOULDER -->
                         <tr class="joint-section-header">
-                            <td colspan="5"><strong>SHOULDER</strong></td>
+                            <td colspan="4"><strong>SHOULDER</strong></td>
+                            <td style="text-align: right;">
+                                <button type="button" class="btn-fill-normal" onclick="fillJointNormal('shoulder', this)">Fill as Normal</button>
+                            </td>
                         </tr>
                         <tr class="column-headers">
                             <td>Movement</td>
@@ -1278,7 +1296,10 @@
 
                         <!-- ELBOW -->
                         <tr class="joint-section-header">
-                            <td colspan="5"><strong>ELBOW</strong></td>
+                            <td colspan="4"><strong>ELBOW</strong></td>
+                            <td style="text-align: right;">
+                                <button type="button" class="btn-fill-normal" onclick="fillJointNormal('elbow', this)">Fill as Normal</button>
+                            </td>
                         </tr>
                         <tr class="column-headers">
                             <td>Movement</td>
@@ -1390,7 +1411,10 @@
 
                         <!-- WRIST -->
                         <tr class="joint-section-header">
-                            <td colspan="5"><strong>WRIST</strong></td>
+                            <td colspan="4"><strong>WRIST</strong></td>
+                            <td style="text-align: right;">
+                                <button type="button" class="btn-fill-normal" onclick="fillJointNormal('wrist', this)">Fill as Normal</button>
+                            </td>
                         </tr>
                         <tr class="column-headers">
                             <td>Movement</td>
@@ -1699,6 +1723,24 @@
     font-size: 0.875rem;
 }
 
+.btn-fill-normal {
+    padding: 0.25rem 0.625rem;
+    background: linear-gradient(135deg, var(--healthcare-primary) 0%, var(--primary-color) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-fill-normal:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
+}
+
 /* Mobile Optimization */
 @media (max-width: 768px) {
     .form-card {
@@ -1751,6 +1793,168 @@
 </style>
 
 <script>
-// Simple form - no complex JavaScript needed
+// Fill joint with normal values
+function fillJointNormal(joint, buttonElement) {
+    // Define normal values for each joint
+    const normalValues = {
+        'ankle': {
+            'ankle_dorsiflexion_rom_left': '20',
+            'ankle_dorsiflexion_rom_right': '20',
+            'ankle_plantarflexion_rom_left': '50',
+            'ankle_plantarflexion_rom_right': '50',
+            'ankle_inversion_rom_left': '35',
+            'ankle_inversion_rom_right': '35',
+            'ankle_eversion_rom_left': '15',
+            'ankle_eversion_rom_right': '15',
+            'ankle_dorsiflexion_strength_left': '5/5',
+            'ankle_dorsiflexion_strength_right': '5/5',
+            'ankle_plantarflexion_strength_left': '5/5',
+            'ankle_plantarflexion_strength_right': '5/5',
+            'ankle_inversion_strength_left': '5/5',
+            'ankle_inversion_strength_right': '5/5',
+            'ankle_eversion_strength_left': '5/5',
+            'ankle_eversion_strength_right': '5/5'
+        },
+        'knee': {
+            'knee_flexion_rom_left': '135',
+            'knee_flexion_rom_right': '135',
+            'knee_extension_rom_left': '0',
+            'knee_extension_rom_right': '0',
+            'knee_flexion_strength_left': '5/5',
+            'knee_flexion_strength_right': '5/5',
+            'knee_extension_strength_left': '5/5',
+            'knee_extension_strength_right': '5/5'
+        },
+        'hip': {
+            'hip_flexion_rom_left': '120',
+            'hip_flexion_rom_right': '120',
+            'hip_extension_rom_left': '30',
+            'hip_extension_rom_right': '30',
+            'hip_abduction_rom_left': '45',
+            'hip_abduction_rom_right': '45',
+            'hip_adduction_rom_left': '30',
+            'hip_adduction_rom_right': '30',
+            'hip_internal_rotation_rom_left': '45',
+            'hip_internal_rotation_rom_right': '45',
+            'hip_external_rotation_rom_left': '45',
+            'hip_external_rotation_rom_right': '45',
+            'hip_flexion_strength_left': '5/5',
+            'hip_flexion_strength_right': '5/5',
+            'hip_extension_strength_left': '5/5',
+            'hip_extension_strength_right': '5/5',
+            'hip_abduction_strength_left': '5/5',
+            'hip_abduction_strength_right': '5/5',
+            'hip_adduction_strength_left': '5/5',
+            'hip_adduction_strength_right': '5/5',
+            'hip_internal_rotation_strength_left': '5/5',
+            'hip_internal_rotation_strength_right': '5/5',
+            'hip_external_rotation_strength_left': '5/5',
+            'hip_external_rotation_strength_right': '5/5'
+        },
+        'lumbar': {
+            'lumbar_flexion_rom': '60',
+            'lumbar_extension_rom': '25',
+            'lumbar_lateral_flexion_left_rom': '25',
+            'lumbar_lateral_flexion_right_rom': '25',
+            'lumbar_rotation_left_rom': '30',
+            'lumbar_rotation_right_rom': '30',
+            'lumbar_flexion_strength': '5/5',
+            'lumbar_extension_strength': '5/5',
+            'lumbar_lateral_flexion_left_strength': '5/5',
+            'lumbar_lateral_flexion_right_strength': '5/5',
+            'lumbar_rotation_left_strength': '5/5',
+            'lumbar_rotation_right_strength': '5/5'
+        },
+        'cervical': {
+            'cervical_flexion_rom': '45',
+            'cervical_extension_rom': '70',
+            'cervical_lateral_flexion_left_rom': '45',
+            'cervical_lateral_flexion_right_rom': '45',
+            'cervical_rotation_left_rom': '80',
+            'cervical_rotation_right_rom': '80',
+            'cervical_flexion_strength': '5/5',
+            'cervical_extension_strength': '5/5',
+            'cervical_lateral_flexion_left_strength': '5/5',
+            'cervical_lateral_flexion_right_strength': '5/5',
+            'cervical_rotation_left_strength': '5/5',
+            'cervical_rotation_right_strength': '5/5'
+        },
+        'shoulder': {
+            'shoulder_flexion_rom_left': '180',
+            'shoulder_flexion_rom_right': '180',
+            'shoulder_extension_rom_left': '60',
+            'shoulder_extension_rom_right': '60',
+            'shoulder_abduction_rom_left': '180',
+            'shoulder_abduction_rom_right': '180',
+            'shoulder_internal_rotation_rom_left': '70',
+            'shoulder_internal_rotation_rom_right': '70',
+            'shoulder_external_rotation_rom_left': '90',
+            'shoulder_external_rotation_rom_right': '90',
+            'shoulder_flexion_strength_left': '5/5',
+            'shoulder_flexion_strength_right': '5/5',
+            'shoulder_extension_strength_left': '5/5',
+            'shoulder_extension_strength_right': '5/5',
+            'shoulder_abduction_strength_left': '5/5',
+            'shoulder_abduction_strength_right': '5/5',
+            'shoulder_internal_rotation_strength_left': '5/5',
+            'shoulder_internal_rotation_strength_right': '5/5',
+            'shoulder_external_rotation_strength_left': '5/5',
+            'shoulder_external_rotation_strength_right': '5/5'
+        },
+        'elbow': {
+            'elbow_flexion_rom_left': '150',
+            'elbow_flexion_rom_right': '150',
+            'elbow_extension_rom_left': '0',
+            'elbow_extension_rom_right': '0',
+            'elbow_flexion_strength_left': '5/5',
+            'elbow_flexion_strength_right': '5/5',
+            'elbow_extension_strength_left': '5/5',
+            'elbow_extension_strength_right': '5/5'
+        },
+        'wrist': {
+            'wrist_flexion_rom_left': '80',
+            'wrist_flexion_rom_right': '80',
+            'wrist_extension_rom_left': '70',
+            'wrist_extension_rom_right': '70',
+            'wrist_radial_deviation_rom_left': '20',
+            'wrist_radial_deviation_rom_right': '20',
+            'wrist_ulnar_deviation_rom_left': '30',
+            'wrist_ulnar_deviation_rom_right': '30',
+            'wrist_flexion_strength_left': '5/5',
+            'wrist_flexion_strength_right': '5/5',
+            'wrist_extension_strength_left': '5/5',
+            'wrist_extension_strength_right': '5/5',
+            'wrist_radial_deviation_strength_left': '5/5',
+            'wrist_radial_deviation_strength_right': '5/5',
+            'wrist_ulnar_deviation_strength_left': '5/5',
+            'wrist_ulnar_deviation_strength_right': '5/5'
+        }
+    };
+    
+    // Get normal values for this joint
+    const values = normalValues[joint];
+    if (!values) return;
+    
+    // Fill all fields for this joint
+    Object.keys(values).forEach(function(fieldName) {
+        const field = document.querySelector(`select[name="${fieldName}"]`);
+        if (field) {
+            field.value = values[fieldName];
+            // Trigger change event for any listeners
+            field.dispatchEvent(new Event('change'));
+        }
+    });
+    
+    // Visual feedback
+    if (!buttonElement) return;
+    const button = buttonElement;
+    const originalText = button.textContent;
+    button.textContent = '✓ Filled';
+    button.style.background = '#10b981';
+    setTimeout(function() {
+        button.textContent = originalText;
+        button.style.background = '';
+    }, 1500);
+}
 </script>
 {% endblock %}

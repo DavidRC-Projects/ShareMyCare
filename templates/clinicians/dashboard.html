@@ -6,8 +6,15 @@
 {% block content %}
 <div class="dashboard-container">
     <div class="dashboard-header">
-        <h1 class="dashboard-title">Practitioner Dashboard</h1>
-        <p class="dashboard-subtitle">Welcome, {{ clinician.full_name }}!</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 class="dashboard-title">Practitioner Dashboard</h1>
+                <p class="dashboard-subtitle">Welcome, {{ clinician.full_name }}!</p>
+            </div>
+            <div class="dashboard-header-actions">
+                <a href="{% url 'clinicians:clients_list' %}" class="btn btn-primary">👥 View All Clients</a>
+            </div>
+        </div>
     </div>
 
     <div class="practitioner-info-card">

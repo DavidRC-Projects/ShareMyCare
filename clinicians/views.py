@@ -4,10 +4,114 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.db import models
+import json
 from .models import Clinician, ClinicianInvitation, PatientClinicianAccess, ObjectiveMeasures
 from .forms import ClinicianForm, ClinicianInvitationForm, ObjectiveMeasuresForm
 from health_records.models import Assessment
 from health_records.forms import PractitionerAssessmentForm
+
+
+def aggregate_movement_fields(request, objective_measures):
+    """
+    Aggregate specific movement fields from POST data into generic model fields.
+    The template uses specific field names (e.g., ankle_dorsiflexion_rom_left) 
+    but the model has generic fields (e.g., ankle_rom_left).
+    Stores data as JSON strings in the model fields.
+    """
+    import re
+    
+    # Define joints with left/right sides
+    bilateral_joints = {
+        'ankle': 'ankle',
+        'knee': 'knee',
+        'hip': 'hip',
+        'shoulder': 'shoulder',
+        'elbow': 'elbow',
+        'wrist': 'wrist',
+    }
+    
+    # Process bilateral joints (with left/right)
+    for joint_name, field_prefix in bilateral_joints.items():
+        rom_left_data = {}
+        rom_right_data = {}
+        power_left_data = {}
+        power_right_data = {}
+        
+        # Pattern to match: {joint}_{movement}_rom_{side} or {joint}_{movement}_strength_{side}
+        pattern_rom = re.compile(rf'^{joint_name}_(.+)_rom_(left|right)$')
+        pattern_strength = re.compile(rf'^{joint_name}_(.+)_strength_(left|right)$')
+        
+        # Process all POST fields for this joint
+        for key, value in request.POST.items():
+            if not value or value.strip() == '':
+                continue
+                
+            # Match ROM fields
+            rom_match = pattern_rom.match(key)
+            if rom_match:
+                movement = rom_match.group(1)
+                side = rom_match.group(2)
+                if side == 'left':
+                    rom_left_data[movement] = value
+                else:
+                    rom_right_data[movement] = value
+                continue
+            
+            # Match strength/power fields
+            strength_match = pattern_strength.match(key)
+            if strength_match:
+                movement = strength_match.group(1)
+                side = strength_match.group(2)
+                if side == 'left':
+                    power_left_data[movement] = value
+                else:
+                    power_right_data[movement] = value
+                continue
+        
+        # Store aggregated data as JSON strings
+        if rom_left_data:
+            setattr(objective_measures, f'{field_prefix}_rom_left', json.dumps(rom_left_data))
+        if rom_right_data:
+            setattr(objective_measures, f'{field_prefix}_rom_right', json.dumps(rom_right_data))
+        if power_left_data:
+            setattr(objective_measures, f'{field_prefix}_power_left', json.dumps(power_left_data))
+        if power_right_data:
+            setattr(objective_measures, f'{field_prefix}_power_right', json.dumps(power_right_data))
+    
+    # Process spine joints (cervical and lumbar) - no left/right
+    for joint_name, field_prefix in [('cervical', 'cervical'), ('lumbar', 'lumbar')]:
+        pattern_rom_spine = re.compile(rf'^{joint_name}_(.+)_rom$')
+        pattern_strength_spine = re.compile(rf'^{joint_name}_(.+)_strength$')
+        
+        rom_data = {}
+        power_data = {}
+        
+        for key, value in request.POST.items():
+            if not value or value.strip() == '':
+                continue
+                
+            rom_match = pattern_rom_spine.match(key)
+            if rom_match:
+                movement = rom_match.group(1)
+                rom_data[movement] = value
+                continue
+            
+            strength_match = pattern_strength_spine.match(key)
+            if strength_match:
+                movement = strength_match.group(1)
+                power_data[movement] = value
+                continue
+        
+        # Store ROM data
+        if rom_data:
+            setattr(objective_measures, f'{field_prefix}_rom', json.dumps(rom_data))
+        
+        # Store power data - lumbar uses core_power, cervical has no power field in model
+        if power_data:
+            if joint_name == 'lumbar':
+                setattr(objective_measures, 'core_power', json.dumps(power_data))
+            # Note: cervical power is not stored as there's no cervical_power field in the model
 
 
 def practitioner_login(request):
@@ -94,6 +198,147 @@ def practitioner_dashboard(request):
         'patients_with_assessments': patients_with_assessments,
     }
     return render(request, 'clinicians/dashboard.html', context)
+
+
+@login_required
+def clients_list(request):
+    """View all clients (patients) that the clinician has access to"""
+    if not hasattr(request.user, 'clinician_profile'):
+        messages.error(request, 'You must be a registered clinician to access this page.')
+        return redirect('health_records:dashboard')
+    
+    clinician = request.user.clinician_profile
+    
+    # Get all active patient accesses
+    patient_accesses = PatientClinicianAccess.objects.filter(
+        clinician=clinician,
+        is_active=True
+    ).select_related('patient').prefetch_related('patient__assessments', 'patient__medications', 'patient__conditions', 'patient__allergies')
+    
+    # Search functionality
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        patient_accesses = patient_accesses.filter(
+            models.Q(patient__username__icontains=search_query) |
+            models.Q(patient__first_name__icontains=search_query) |
+            models.Q(patient__last_name__icontains=search_query) |
+            models.Q(patient__email__icontains=search_query)
+        )
+    
+    # Prepare client data with stats
+    clients_data = []
+    from health_records.models import Assessment
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    for access in patient_accesses:
+        patient = access.patient
+        assessments = Assessment.objects.filter(user=patient)
+        
+        # Calculate stats
+        total_assessments = assessments.count()
+        recent_assessment = assessments.order_by('-assessment_date', '-created_at').first()
+        last_visit = recent_assessment.assessment_date if recent_assessment and recent_assessment.assessment_date else None
+        
+        # Count other records
+        medications_count = patient.medications.filter(is_active=True).count()
+        conditions_count = patient.conditions.filter(status='active').count()
+        allergies_count = patient.allergies.count()
+        
+        # Check if patient has recent activity (last 30 days)
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        has_recent_activity = assessments.filter(
+            models.Q(assessment_date__gte=thirty_days_ago.date()) |
+            models.Q(created_at__gte=thirty_days_ago)
+        ).exists()
+        
+        clients_data.append({
+            'patient': patient,
+            'access': access,
+            'total_assessments': total_assessments,
+            'last_visit': last_visit,
+            'medications_count': medications_count,
+            'conditions_count': conditions_count,
+            'allergies_count': allergies_count,
+            'has_recent_activity': has_recent_activity,
+            'recent_assessment': recent_assessment,
+        })
+    
+    # Sort by last visit (most recent first) or by name if no visits
+    from datetime import date
+    clients_data.sort(key=lambda x: (
+        x['last_visit'] if x['last_visit'] else date.min,
+        (x['patient'].get_full_name() or x['patient'].username).lower()
+    ), reverse=True)
+    
+    context = {
+        'clinician': clinician,
+        'clients_data': clients_data,
+        'search_query': search_query,
+        'total_clients': len(clients_data),
+    }
+    return render(request, 'clinicians/clients_list.html', context)
+
+
+@login_required
+def client_detail(request, patient_id):
+    """View detailed information about a specific client"""
+    if not hasattr(request.user, 'clinician_profile'):
+        messages.error(request, 'You must be a registered clinician to access this page.')
+        return redirect('health_records:dashboard')
+    
+    clinician = request.user.clinician_profile
+    patient = get_object_or_404(User, pk=patient_id)
+    
+    # Check if clinician has access to this patient
+    access = PatientClinicianAccess.objects.filter(
+        patient=patient,
+        clinician=clinician,
+        is_active=True
+    ).first()
+    
+    if not access:
+        messages.error(request, 'You do not have access to this patient\'s records.')
+        return redirect('clinicians:clients_list')
+    
+    # Get all patient data
+    from health_records.models import Assessment, Medication, Condition, Allergy, WorkHistory
+    
+    assessments = Assessment.objects.filter(user=patient).order_by('-assessment_date', '-created_at')
+    medications = Medication.objects.filter(user=patient).order_by('-is_active', '-start_date')
+    conditions = Condition.objects.filter(user=patient).order_by('-diagnosis_date')
+    allergies = Allergy.objects.filter(user=patient).order_by('-severity', '-date_identified')
+    work_history = WorkHistory.objects.filter(user=patient).order_by('-is_current', '-start_date')
+    
+    # Get patient profile
+    try:
+        profile = patient.profile
+    except:
+        profile = None
+    
+    # Get recent assessments count
+    from django.utils import timezone
+    from datetime import timedelta
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    recent_assessments = assessments.filter(
+        models.Q(assessment_date__gte=thirty_days_ago.date()) | 
+        models.Q(created_at__gte=thirty_days_ago)
+    )
+    
+    context = {
+        'clinician': clinician,
+        'patient': patient,
+        'access': access,
+        'profile': profile,
+        'assessments': assessments,
+        'medications': medications,
+        'conditions': conditions,
+        'allergies': allergies,
+        'work_history': work_history,
+        'recent_assessments_count': recent_assessments.count(),
+        'total_assessments': assessments.count(),
+    }
+    return render(request, 'clinicians/client_detail.html', context)
 
 
 @login_required
@@ -271,32 +516,8 @@ def add_objective_measures(request, assessment_pk):
             objective_measures.assessment = assessment
             objective_measures.clinician = clinician
             
-            # Handle free text inputs - if dropdown value is 'free_text', use the free text input
-            rom_power_fields = [
-                'shoulder_rom_left', 'shoulder_rom_right', 'elbow_rom_left', 'elbow_rom_right',
-                'hip_rom_left', 'hip_rom_right', 'knee_rom_left', 'knee_rom_right',
-                'ankle_rom_left', 'ankle_rom_right', 'wrist_rom_left', 'wrist_rom_right',
-                'hand_rom_left', 'hand_rom_right', 'foot_rom_left', 'foot_rom_right',
-                'cervical_rom', 'thoracic_rom', 'lumbar_rom',
-                'shoulder_power_left', 'shoulder_power_right', 'elbow_power_left', 'elbow_power_right',
-                'hip_power_left', 'hip_power_right', 'knee_power_left', 'knee_power_right',
-                'ankle_power_left', 'ankle_power_right', 'wrist_power_left', 'wrist_power_right',
-                'grip_power_left', 'grip_power_right', 'core_power'
-            ]
-            
-            for field_name in rom_power_fields:
-                field_value = getattr(objective_measures, field_name, None)
-                if field_value == 'free_text':
-                    # Get free text value from POST
-                    free_text_key = f'{field_name}_free'
-                    free_text_value = request.POST.get(free_text_key, '').strip()
-                    if free_text_value:
-                        setattr(objective_measures, field_name, free_text_value)
-                    else:
-                        setattr(objective_measures, field_name, 'normal')
-                elif not field_value:
-                    # Set default to 'normal' for empty fields
-                    setattr(objective_measures, field_name, 'normal')
+            # Aggregate specific movement fields from template into generic model fields
+            aggregate_movement_fields(request, objective_measures)
             
             objective_measures.save()
             messages.success(request, 'Objective measures added successfully!')
@@ -326,32 +547,8 @@ def edit_objective_measures(request, pk):
         if form.is_valid():
             objective_measures = form.save(commit=False)
             
-            # Handle free text inputs - if dropdown value is 'free_text', use the free text input
-            rom_power_fields = [
-                'shoulder_rom_left', 'shoulder_rom_right', 'elbow_rom_left', 'elbow_rom_right',
-                'hip_rom_left', 'hip_rom_right', 'knee_rom_left', 'knee_rom_right',
-                'ankle_rom_left', 'ankle_rom_right', 'wrist_rom_left', 'wrist_rom_right',
-                'hand_rom_left', 'hand_rom_right', 'foot_rom_left', 'foot_rom_right',
-                'cervical_rom', 'thoracic_rom', 'lumbar_rom',
-                'shoulder_power_left', 'shoulder_power_right', 'elbow_power_left', 'elbow_power_right',
-                'hip_power_left', 'hip_power_right', 'knee_power_left', 'knee_power_right',
-                'ankle_power_left', 'ankle_power_right', 'wrist_power_left', 'wrist_power_right',
-                'grip_power_left', 'grip_power_right', 'core_power'
-            ]
-            
-            for field_name in rom_power_fields:
-                field_value = getattr(objective_measures, field_name, None)
-                if field_value == 'free_text':
-                    # Get free text value from POST
-                    free_text_key = f'{field_name}_free'
-                    free_text_value = request.POST.get(free_text_key, '').strip()
-                    if free_text_value:
-                        setattr(objective_measures, field_name, free_text_value)
-                    else:
-                        setattr(objective_measures, field_name, 'normal')
-                elif not field_value:
-                    # Set default to 'normal' for empty fields
-                    setattr(objective_measures, field_name, 'normal')
+            # Aggregate specific movement fields from template into generic model fields
+            aggregate_movement_fields(request, objective_measures)
             
             objective_measures.save()
             messages.success(request, 'Objective measures updated successfully!')

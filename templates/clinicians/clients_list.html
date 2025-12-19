@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Clients - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 class="dashboard-title">My Clients</h1>
+                <p class="dashboard-subtitle">Manage and view all your patients</p>
+            </div>
+            <div class="dashboard-header-actions">
+                <a href="{% url 'clinicians:dashboard' %}" class="btn btn-secondary">Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div class="card-body">
+            <form method="get" action="{% url 'clinicians:clients_list' %}" class="search-form">
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <input 
+                        type="text" 
+                        name="search" 
+                        value="{{ search_query }}"
+                        placeholder="Search clients by name, username, or email..." 
+                        class="form-control"
+                        style="flex: 1; max-width: 500px;"
+                    >
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    {% if search_query %}
+                    <a href="{% url 'clinicians:clients_list' %}" class="btn btn-secondary">Clear</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stats Summary -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div class="card">
+            <div class="card-body" style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">{{ total_clients }}</div>
+                <div style="color: var(--text-secondary); margin-top: 0.5rem;">Total Clients</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clients Grid -->
+    {% if clients_data %}
+    <div class="clients-grid">
+        {% for client_data in clients_data %}
+        <a href="{% url 'clinicians:client_detail' client_data.patient.id %}" class="client-card-link">
+            <div class="dashboard-card client-card {% if client_data.has_recent_activity %}client-card-active{% endif %}">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <div class="card-icon-emoji">👤</div>
+                        <div style="flex: 1;">
+                            <h2 class="card-title">
+                                {{ client_data.patient.get_full_name|default:client_data.patient.username }}
+                            </h2>
+                            <p class="card-subtitle">{{ client_data.patient.email }}</p>
+                        </div>
+                        {% if client_data.has_recent_activity %}
+                        <span class="badge badge-success" title="Recent activity in last 30 days">Active</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="client-stats-grid">
+                        <div class="client-stat-item">
+                            <div class="client-stat-value">{{ client_data.total_assessments }}</div>
+                            <div class="client-stat-label">Assessments</div>
+                        </div>
+                        <div class="client-stat-item">
+                            <div class="client-stat-value">{{ client_data.medications_count }}</div>
+                            <div class="client-stat-label">Medications</div>
+                        </div>
+                        <div class="client-stat-item">
+                            <div class="client-stat-value">{{ client_data.conditions_count }}</div>
+                            <div class="client-stat-label">Conditions</div>
+                        </div>
+                        <div class="client-stat-item">
+                            <div class="client-stat-value">{{ client_data.allergies_count }}</div>
+                            <div class="client-stat-label">Allergies</div>
+                        </div>
+                    </div>
+                    
+                    {% if client_data.last_visit %}
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Last Visit:</span>
+                            <strong>{{ client_data.last_visit|date:"M d, Y" }}</strong>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                        <span style="color: var(--text-secondary); font-size: 0.875rem;">No visits recorded yet</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Access Level:</span>
+                            <span class="badge badge-info">{{ client_data.access.get_access_level_display }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body">
+            <div class="empty-state">
+                {% if search_query %}
+                <p>No clients found matching "{{ search_query }}".</p>
+                <a href="{% url 'clinicians:clients_list' %}" class="btn btn-secondary">View All Clients</a>
+                {% else %}
+                <p>No clients have granted you access yet.</p>
+                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                    Patients can invite you via email or by using your practitioner code to access their health records.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.clients-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.client-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.client-card-link:hover {
+    transform: translateY(-4px);
+}
+
+.client-card-link:hover .client-card {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.client-card {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.client-card-active {
+    border-left: 4px solid var(--success-color);
+}
+
+.client-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.client-stat-item {
+    text-align: center;
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+}
+
+.client-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.client-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.search-form {
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .clients-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .client-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+{% endblock %}
+

@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ patient.get_full_name|default:patient.username }} - Client Details{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 class="dashboard-title">{{ patient.get_full_name|default:patient.username }}</h1>
+                <p class="dashboard-subtitle">Client Details & Health Records</p>
+            </div>
+            <div class="dashboard-header-actions">
+                <a href="{% url 'clinicians:clients_list' %}" class="btn btn-secondary">← Back to Clients</a>
+                <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn btn-primary">➕ New Assessment</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div class="card">
+            <div class="card-body" style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">{{ total_assessments }}</div>
+                <div style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.875rem;">Total Assessments</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body" style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--success-color);">{{ medications|length }}</div>
+                <div style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.875rem;">Medications</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body" style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--warning-color);">{{ conditions|length }}</div>
+                <div style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.875rem;">Conditions</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body" style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--danger-color);">{{ allergies|length }}</div>
+                <div style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.875rem;">Allergies</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Patient Information -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2 class="card-title">Patient Information</h2>
+            </div>
+            <div class="card-content">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Full Name:</label>
+                        <span>{{ patient.get_full_name|default:"Not provided" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Username:</label>
+                        <span>{{ patient.username }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Email:</label>
+                        <span>{{ patient.email|default:"Not provided" }}</span>
+                    </div>
+                    {% if profile %}
+                    <div class="info-item">
+                        <label>Date of Birth:</label>
+                        <span>{{ profile.date_of_birth|date:"F d, Y"|default:"Not provided" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Phone:</label>
+                        <span>{{ profile.phone|default:"Not provided" }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="info-item">
+                        <label>Access Level:</label>
+                        <span class="badge badge-info">{{ access.get_access_level_display }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Access Granted:</label>
+                        <span>{{ access.granted_at|date:"F d, Y" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Medications -->
+        {% if medications %}
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2 class="card-title">Active Medications ({{ medications|length }})</h2>
+            </div>
+            <div class="card-content">
+                <div class="items-list">
+                    {% for medication in medications|slice:":5" %}
+                    <div class="item-row">
+                        <div class="item-info">
+                            <h4>{{ medication.name }}</h4>
+                            <p class="item-details">
+                                {% if medication.dosage %}<strong>Dosage:</strong> {{ medication.dosage }}<br>{% endif %}
+                                {% if medication.frequency %}<strong>Frequency:</strong> {{ medication.frequency }}<br>{% endif %}
+                                {% if medication.prescribing_clinician %}<strong>Prescribed by:</strong> {{ medication.prescribing_clinician }}{% endif %}
+                            </p>
+                            {% if medication.is_active %}
+                            <span class="badge badge-success">Active</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Inactive</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if medications|length > 5 %}
+                <div style="margin-top: 1rem; text-align: center;">
+                    <small style="color: var(--text-secondary);">Showing 5 of {{ medications|length }} medications</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Active Conditions -->
+        {% if conditions %}
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2 class="card-title">Conditions ({{ conditions|length }})</h2>
+            </div>
+            <div class="card-content">
+                <div class="items-list">
+                    {% for condition in conditions|slice:":5" %}
+                    <div class="item-row">
+                        <div class="item-info">
+                            <h4>{{ condition.name }}</h4>
+                            <p class="item-details">
+                                <span class="badge badge-{{ condition.status }}">{{ condition.get_status_display }}</span>
+                                {% if condition.diagnosis_date %}<br><strong>Diagnosed:</strong> {{ condition.diagnosis_date|date:"F d, Y" }}{% endif %}
+                            </p>
+                            {% if condition.notes %}
+                            <p style="margin-top: 0.5rem; color: var(--text-secondary);">{{ condition.notes|truncatewords:20 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if conditions|length > 5 %}
+                <div style="margin-top: 1rem; text-align: center;">
+                    <small style="color: var(--text-secondary);">Showing 5 of {{ conditions|length }} conditions</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Allergies -->
+        {% if allergies %}
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2 class="card-title">Allergies ({{ allergies|length }})</h2>
+            </div>
+            <div class="card-content">
+                <div class="items-list">
+                    {% for allergy in allergies %}
+                    <div class="item-row">
+                        <div class="item-info">
+                            <h4>{{ allergy.allergen }}</h4>
+                            <p class="item-details">
+                                <span class="badge badge-{{ allergy.severity }}">{{ allergy.get_severity_display }}</span>
+                                <br><strong>Reaction:</strong> {{ allergy.reaction|truncatewords:15 }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Assessments Section -->
+    <div class="dashboard-card" style="margin-top: 2rem;">
+        <div class="card-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="card-title">Assessments ({{ total_assessments }})</h2>
+                <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn btn-primary btn-sm">➕ Create New Assessment</a>
+            </div>
+        </div>
+        <div class="card-content">
+            {% if assessments %}
+            <div class="items-list">
+                {% for assessment in assessments %}
+                <div class="item-row">
+                    <div class="item-info">
+                        <h4>
+                            Assessment 
+                            {% if assessment.assessment_date %}
+                                - {{ assessment.assessment_date|date:"d M Y" }}
+                            {% elif assessment.symptom_date %}
+                                - {{ assessment.symptom_date|date:"d M Y" }}
+                            {% else %}
+                                - {{ assessment.created_at|date:"d M Y" }}
+                            {% endif %}
+                            {% if assessment.assessment_type %}
+                                <span class="badge badge-info">{{ assessment.get_assessment_type_display }}</span>
+                            {% endif %}
+                        </h4>
+                        {% if assessment.has_user_symptoms %}
+                        <p class="item-details">
+                            <strong>Patient Symptoms:</strong>
+                            {% if assessment.current_symptoms %}
+                                {{ assessment.current_symptoms|truncatewords:20 }}
+                            {% endif %}
+                            {% if assessment.pain_level is not None %}
+                                • Pain Level: {{ assessment.pain_level }}/10
+                            {% endif %}
+                        </p>
+                        {% endif %}
+                        {% if assessment.objective_findings %}
+                        <p class="item-details">
+                            <strong>Objective Findings:</strong> {{ assessment.objective_findings|truncatewords:20 }}
+                        </p>
+                        {% endif %}
+                        {% if assessment.treatment_plan %}
+                        <p class="item-details">
+                            <strong>Treatment Plan:</strong> {{ assessment.treatment_plan|truncatewords:20 }}
+                        </p>
+                        {% endif %}
+                        <div class="item-badges">
+                            {% if assessment.has_user_symptoms %}
+                            <span class="badge badge-info">Patient Symptoms</span>
+                            {% endif %}
+                            {% if assessment.has_practitioner_data %}
+                            <span class="badge badge-success">Practitioner Data</span>
+                            {% endif %}
+                            {% if assessment.objective_measures %}
+                            <span class="badge badge-primary">Objective Measures</span>
+                            {% endif %}
+                            {% if assessment.practitioner_notes_image %}
+                            <span class="badge badge-warning">Notes Image</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        {% if assessment.has_practitioner_data %}
+                        <a href="{% url 'health_records:edit_practitioner_assessment' assessment.pk %}" class="btn-icon" title="Edit Assessment">📝</a>
+                        {% else %}
+                        <a href="{% url 'health_records:add_practitioner_assessment' assessment.pk %}" class="btn-icon" title="Complete Assessment">✅</a>
+                        {% endif %}
+                        {% if assessment.objective_measures %}
+                        <a href="{% url 'clinicians:edit_objective_measures' assessment.objective_measures.pk %}" class="btn-icon" title="Edit Objective Measures">📊</a>
+                        {% else %}
+                        <a href="{% url 'clinicians:add_objective_measures' assessment.pk %}" class="btn-icon" title="Add Objective Measures">➕</a>
+                        {% endif %}
+                        {% if assessment.practitioner_notes_image %}
+                        {% if assessment.extracted_findings.exists %}
+                        <a href="{% url 'health_records:view_extracted_findings' assessment.pk %}" class="btn-icon" title="View Extracted Findings">📋</a>
+                        {% else %}
+                        <a href="{% url 'health_records:process_notes_image' assessment.pk %}" class="btn-icon" title="Extract Findings">🔍</a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No assessments recorded yet.</p>
+                <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn btn-primary">Create First Assessment</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

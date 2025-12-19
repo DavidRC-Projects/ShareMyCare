@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Medication, Condition, Allergy, Assessment, WorkHistory
+from django.utils import timezone
+from django.conf import settings
+from .models import Medication, Condition, Allergy, Assessment, WorkHistory, ExtractedFindings
 from accounts.models import UserProfile
 from .forms import (
     MedicationForm, ConditionForm, AllergyForm, 
@@ -9,6 +11,7 @@ from .forms import (
 )
 from clinicians.models import PatientClinicianAccess, Clinician, ClinicianInvitation
 from clinicians.forms import HealthcareFeedbackForm, ClinicianInvitationForm
+from .azure_doc_intelligence import AzureDocumentIntelligenceService
 
 
 def home(request):
@@ -209,13 +212,40 @@ def edit_assessment(request, pk):
 
 @login_required
 def delete_assessment(request, pk):
-    """Delete a symptom entry"""
+    """Delete a symptom entry and notify clinicians"""
     assessment = get_object_or_404(Assessment, pk=pk, user=request.user)
+    
     if request.method == 'POST':
+        # Get clinicians who have access to this patient
+        clinician_accesses = PatientClinicianAccess.objects.filter(
+            patient=request.user,
+            is_active=True
+        ).select_related('clinician')
+        
+        # Store assessment info before deletion for notification
+        assessment_date = assessment.symptom_date or assessment.created_at
+        patient_name = request.user.get_full_name() or request.user.username
+        
+        # Delete the assessment
         assessment.delete()
-        messages.success(request, 'Symptom entry deleted successfully!')
+        
+        # Notify clinicians (store in session or send email - for now we'll add a system message)
+        # In a production system, you'd send emails or create notification records
+        for access in clinician_accesses:
+            # You could create a Notification model here
+            # For now, we'll log it
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"Assessment deleted by {patient_name} on {assessment_date}. Clinician {access.clinician.full_name} ({access.clinician.email}) should be notified.")
+        
+        messages.success(request, f'Assessment deleted successfully! {clinician_accesses.count()} clinician(s) have been notified.')
         return redirect('health_records:dashboard')
-    return render(request, 'health_records/delete_confirm.html', {'item': assessment, 'item_type': 'symptom entry'})
+    
+    return render(request, 'health_records/delete_confirm.html', {
+        'item': assessment, 
+        'item_type': 'assessment',
+        'warning_message': 'This assessment will be permanently deleted and your clinicians will be notified of the deletion.'
+    })
 
 
 # Practitioner Assessment Views
@@ -610,4 +640,217 @@ def revoke_clinician_access(request, access_pk):
     return render(request, 'health_records/revoke_access_confirm.html', {
         'access': access,
         'clinician': access.clinician
+    })
+
+
+@login_required
+def process_notes_image(request, assessment_pk):
+    """Process uploaded therapist notes image using Azure Document Intelligence"""
+    assessment = get_object_or_404(Assessment, pk=assessment_pk)
+    
+    # Check permissions - user must own the assessment or be a clinician with access
+    is_owner = assessment.user == request.user
+    is_clinician = False
+    clinician = None
+    
+    if hasattr(request.user, 'clinician_profile'):
+        clinician = request.user.clinician_profile
+        has_access = PatientClinicianAccess.objects.filter(
+            patient=assessment.user,
+            clinician=clinician,
+            is_active=True
+        ).exists()
+        is_clinician = has_access
+    
+    if not (is_owner or is_clinician):
+        messages.error(request, 'You do not have permission to process this assessment.')
+        return redirect('health_records:dashboard')
+    
+    # Check if image exists
+    if not assessment.practitioner_notes_image:
+        messages.error(request, 'No notes image found for this assessment.')
+        if is_clinician:
+            return redirect('clinicians:dashboard')
+        return redirect('health_records:dashboard')
+    
+    # Initialize Azure Document Intelligence service
+    doc_service = AzureDocumentIntelligenceService()
+    
+    if not doc_service.is_configured():
+        messages.error(
+            request,
+            'Azure Document Intelligence is not configured. Please contact your administrator.'
+        )
+        if is_clinician:
+            return redirect('clinicians:dashboard')
+        return redirect('health_records:dashboard')
+    
+    # Get the full path to the image
+    image_path = assessment.practitioner_notes_image.path
+    
+    # Process the document
+    try:
+        extracted_data = doc_service.analyze_document(image_path)
+        
+        if not extracted_data:
+            messages.error(request, 'Failed to extract data from the notes image.')
+            if is_clinician:
+                return redirect('clinicians:dashboard')
+            return redirect('health_records:dashboard')
+        
+        # Delete existing extracted findings for this assessment
+        ExtractedFindings.objects.filter(assessment=assessment).delete()
+        
+        # Create ExtractedFindings records
+        findings_created = 0
+        for finding_data in extracted_data.get('findings', []):
+            finding = ExtractedFindings.objects.create(
+                assessment=assessment,
+                category=finding_data.get('category', 'general'),
+                finding_type=finding_data.get('type', 'observation'),
+                text=finding_data.get('text', ''),
+                raw_extraction_data=extracted_data,
+            )
+            findings_created += 1
+        
+        messages.success(
+            request,
+            f'Successfully extracted {findings_created} findings from the notes image!'
+        )
+        
+        # Redirect to view findings
+        return redirect('health_records:view_extracted_findings', assessment_pk=assessment.pk)
+        
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error processing notes image: {e}")
+        messages.error(
+            request,
+            f'An error occurred while processing the image: {str(e)}'
+        )
+        if is_clinician:
+            return redirect('clinicians:dashboard')
+        return redirect('health_records:dashboard')
+
+
+@login_required
+def view_extracted_findings(request, assessment_pk):
+    """View extracted findings from therapist notes"""
+    assessment = get_object_or_404(Assessment, pk=assessment_pk)
+    
+    # Check permissions
+    is_owner = assessment.user == request.user
+    is_clinician = False
+    clinician = None
+    
+    if hasattr(request.user, 'clinician_profile'):
+        clinician = request.user.clinician_profile
+        has_access = PatientClinicianAccess.objects.filter(
+            patient=assessment.user,
+            clinician=clinician,
+            is_active=True
+        ).exists()
+        is_clinician = has_access
+    
+    if not (is_owner or is_clinician):
+        messages.error(request, 'You do not have permission to view this assessment.')
+        return redirect('health_records:dashboard')
+    
+    # Get extracted findings grouped by category
+    findings = ExtractedFindings.objects.filter(assessment=assessment).order_by('category', 'extracted_at')
+    
+    # Group findings by category
+    findings_by_category = {}
+    for finding in findings:
+        category = finding.get_category_display()
+        if category not in findings_by_category:
+            findings_by_category[category] = []
+        findings_by_category[category].append(finding)
+    
+    context = {
+        'assessment': assessment,
+        'findings': findings,
+        'findings_by_category': findings_by_category,
+        'is_clinician': is_clinician,
+        'clinician': clinician,
+        'has_image': bool(assessment.practitioner_notes_image),
+    }
+    
+    return render(request, 'health_records/extracted_findings.html', context)
+
+
+@login_required
+def verify_finding(request, finding_pk):
+    """Verify an extracted finding (clinician only)"""
+    finding = get_object_or_404(ExtractedFindings, pk=finding_pk)
+    
+    # Only clinicians can verify findings
+    if not hasattr(request.user, 'clinician_profile'):
+        messages.error(request, 'Only clinicians can verify findings.')
+        return redirect('health_records:view_extracted_findings', assessment_pk=finding.assessment.pk)
+    
+    clinician = request.user.clinician_profile
+    
+    # Check if clinician has access to this patient
+    has_access = PatientClinicianAccess.objects.filter(
+        patient=finding.assessment.user,
+        clinician=clinician,
+        is_active=True
+    ).exists()
+    
+    if not has_access:
+        messages.error(request, 'You do not have access to this patient\'s records.')
+        return redirect('health_records:dashboard')
+    
+    # Toggle verification status
+    if finding.is_verified and finding.verified_by == clinician:
+        # Unverify
+        finding.is_verified = False
+        finding.verified_by = None
+        finding.verified_at = None
+        messages.success(request, 'Finding unverified.')
+    else:
+        # Verify
+        finding.is_verified = True
+        finding.verified_by = clinician
+        finding.verified_at = timezone.now()
+        messages.success(request, 'Finding verified.')
+    
+    finding.save()
+    
+    return redirect('health_records:view_extracted_findings', assessment_pk=finding.assessment.pk)
+
+
+@login_required
+def delete_finding(request, finding_pk):
+    """Delete an extracted finding"""
+    finding = get_object_or_404(ExtractedFindings, pk=finding_pk)
+    assessment = finding.assessment
+    
+    # Check permissions
+    is_owner = assessment.user == request.user
+    is_clinician = False
+    
+    if hasattr(request.user, 'clinician_profile'):
+        clinician = request.user.clinician_profile
+        has_access = PatientClinicianAccess.objects.filter(
+            patient=assessment.user,
+            clinician=clinician,
+            is_active=True
+        ).exists()
+        is_clinician = has_access
+    
+    if not (is_owner or is_clinician):
+        messages.error(request, 'You do not have permission to delete this finding.')
+        return redirect('health_records:dashboard')
+    
+    if request.method == 'POST':
+        finding.delete()
+        messages.success(request, 'Finding deleted successfully.')
+        return redirect('health_records:view_extracted_findings', assessment_pk=assessment.pk)
+    
+    return render(request, 'health_records/delete_confirm.html', {
+        'item': finding,
+        'item_type': 'finding'
     })

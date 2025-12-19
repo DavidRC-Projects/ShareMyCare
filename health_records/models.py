@@ -256,3 +256,86 @@ class WorkHistory(models.Model):
         """Return human-readable activity names"""
         activity_dict = dict(self.ACTIVITY_CHOICES)
         return [activity_dict.get(activity, activity) for activity in self.activities]
+
+
+class ExtractedFindings(models.Model):
+    """Extracted findings from therapist notes using Azure Document Intelligence"""
+    assessment = models.ForeignKey(
+        Assessment,
+        on_delete=models.CASCADE,
+        related_name='extracted_findings',
+        help_text="Assessment this finding belongs to"
+    )
+    
+    # Finding details
+    category = models.CharField(
+        max_length=50,
+        choices=[
+            ('assessment', 'Assessment'),
+            ('diagnosis', 'Diagnosis'),
+            ('treatment', 'Treatment'),
+            ('prognosis', 'Prognosis'),
+            ('recommendations', 'Recommendations'),
+            ('measurements', 'Measurements'),
+            ('symptoms', 'Symptoms'),
+            ('general', 'General'),
+        ],
+        default='general',
+        help_text="Category of the finding"
+    )
+    
+    finding_type = models.CharField(
+        max_length=50,
+        choices=[
+            ('measurement', 'Measurement'),
+            ('strength', 'Strength'),
+            ('symptom', 'Symptom'),
+            ('treatment', 'Treatment'),
+            ('observation', 'Observation'),
+        ],
+        default='observation',
+        help_text="Type of finding"
+    )
+    
+    text = models.TextField(
+        help_text="Extracted text of the finding"
+    )
+    
+    # Metadata
+    raw_extraction_data = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="Raw data from Azure Document Intelligence"
+    )
+    
+    extracted_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When the finding was extracted"
+    )
+    
+    is_verified = models.BooleanField(
+        default=False,
+        help_text="Whether the finding has been verified by a clinician"
+    )
+    
+    verified_by = models.ForeignKey(
+        'clinicians.Clinician',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='verified_findings',
+        help_text="Clinician who verified this finding"
+    )
+    
+    verified_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the finding was verified"
+    )
+    
+    class Meta:
+        ordering = ['-extracted_at', 'category']
+        verbose_name_plural = 'Extracted Findings'
+    
+    def __str__(self):
+        return f"Finding: {self.text[:50]}... ({self.get_category_display()})"
