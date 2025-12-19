@@ -5,6 +5,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db import models
+from django.core.mail import send_mail
+from django.conf import settings
+from django.http import JsonResponse
 import json
 from .models import Clinician, ClinicianInvitation, PatientClinicianAccess, ObjectiveMeasures
 from .forms import ClinicianForm, ClinicianInvitationForm, ObjectiveMeasuresForm
@@ -198,6 +201,88 @@ def practitioner_dashboard(request):
         'patients_with_assessments': patients_with_assessments,
     }
     return render(request, 'clinicians/dashboard.html', context)
+
+
+@login_required
+def send_practitioner_code_email(request):
+    """Send practitioner code to a client via email"""
+    if not hasattr(request.user, 'clinician_profile'):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'You must be a registered clinician.'}, status=403)
+        messages.error(request, 'You must be a registered clinician to access this page.')
+        return redirect('health_records:dashboard')
+    
+    clinician = request.user.clinician_profile
+    
+    if request.method == 'POST':
+        client_email = request.POST.get('client_email', '').strip()
+        
+        if not client_email:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': 'Please provide a client email address.'}, status=400)
+            messages.error(request, 'Please provide a client email address.')
+            return redirect('clinicians:dashboard')
+        
+        if not clinician.practitioner_code:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': 'Practitioner code not available.'}, status=400)
+            messages.error(request, 'Practitioner code not available.')
+            return redirect('clinicians:dashboard')
+        
+        # Prepare email content
+        subject = f'Your Practitioner Code from {clinician.full_name}'
+        message = f'''Hello,
+
+{clinician.get_title_display()} {clinician.full_name} has shared their practitioner code with you.
+
+Your Practitioner Code: {clinician.practitioner_code}
+
+You can use this code to connect with {clinician.get_title_display()} {clinician.full_name} on ShareMyCare and share your health records securely.
+
+To use this code:
+1. Visit ShareMyCare and sign in (or create an account)
+2. Go to "Share with Clinicians" in your dashboard
+3. Enter the practitioner code: {clinician.practitioner_code}
+4. Follow the prompts to grant access
+
+If you have any questions, please contact {clinician.get_title_display()} {clinician.full_name} directly.
+
+Best regards,
+ShareMyCare Team
+'''
+        
+        # Get default from email or use a fallback
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@sharemycare.com')
+        
+        try:
+            send_mail(
+                subject,
+                message,
+                from_email,
+                [client_email],
+                fail_silently=False,
+            )
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'status': 'success',
+                    'message': f'Practitioner code sent successfully to {client_email}!'
+                })
+            messages.success(request, f'Practitioner code sent successfully to {client_email}!')
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error sending email: {e}")
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Failed to send email: {str(e)}. Please check your email configuration.'
+                }, status=500)
+            messages.error(request, f'Failed to send email: {str(e)}. Please check your email configuration.')
+    
+    # If GET request, redirect to dashboard
+    return redirect('clinicians:dashboard')
 
 
 @login_required
@@ -596,6 +681,10 @@ def create_assessment(request, patient_id):
         logger = logging.getLogger(__name__)
         
         form = PractitionerAssessmentForm(request.POST, request.FILES, clinician=clinician)
+        
+        # Check if this is a quick save with image only
+        quick_save = request.POST.get('quick_save_with_image') == '1'
+        
         if form.is_valid():
             assessment = form.save(commit=False)
             assessment.user = patient
@@ -606,11 +695,18 @@ def create_assessment(request, patient_id):
             # Set completed_at to now if not provided
             if not assessment.completed_at:
                 assessment.completed_at = timezone.now()
+            # For quick save, set assessment_date if not provided
+            if quick_save and not assessment.assessment_date:
+                assessment.assessment_date = timezone.now().date()
             assessment.save()
             
             # Check if an image was uploaded and process it automatically
             image_uploaded = assessment.practitioner_notes_image
             if image_uploaded:
+                if quick_save:
+                    messages.success(request, 'Assessment saved with image! Processing notes...')
+                else:
+                    messages.success(request, 'Assessment created successfully! Image uploaded. Processing with document intelligence...')
                 messages.success(request, 'Assessment created successfully! Image uploaded. Processing with document intelligence...')
                 
                 # Initialize Azure Document Intelligence service
@@ -688,6 +784,126 @@ def create_assessment(request, patient_id):
             form.fields['assessment_type'].initial = 'physiotherapy'
     
     return render(request, 'clinicians/create_assessment.html', {
+        'form': form,
+        'patient': patient,
+        'clinician': clinician,
+        'is_physiotherapist': is_physiotherapist
+    })
+
+
+@login_required
+def quick_upload_assessment(request, patient_id):
+    """Quick upload assessment page - minimal form with just image upload"""
+    if not hasattr(request.user, 'clinician_profile'):
+        messages.error(request, 'You must be a registered clinician to access this page.')
+        return redirect('health_records:dashboard')
+    
+    clinician = request.user.clinician_profile
+    patient = get_object_or_404(User, pk=patient_id)
+    
+    # Check if clinician has access to this patient
+    has_access = PatientClinicianAccess.objects.filter(
+        patient=patient,
+        clinician=clinician,
+        is_active=True
+    ).exists()
+    
+    if not has_access:
+        messages.error(request, 'You do not have access to this patient\'s records.')
+        return redirect('clinicians:dashboard')
+    
+    # Determine assessment type based on practitioner title
+    is_physiotherapist = clinician.title == 'physiotherapist'
+    
+    if request.method == 'POST':
+        from health_records.azure_doc_intelligence import AzureDocumentIntelligenceService
+        from health_records.models import ExtractedFindings
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
+        form = PractitionerAssessmentForm(request.POST, request.FILES, clinician=clinician)
+        if form.is_valid():
+            assessment = form.save(commit=False)
+            assessment.user = patient
+            assessment.clinician = clinician
+            # Auto-set assessment_type based on practitioner title
+            if is_physiotherapist:
+                assessment.assessment_type = 'physiotherapy'
+            # Set completed_at to now if not provided
+            if not assessment.completed_at:
+                assessment.completed_at = timezone.now()
+            # Set assessment_date if not provided
+            if not assessment.assessment_date:
+                assessment.assessment_date = timezone.now().date()
+            assessment.save()
+            
+            # Process image automatically
+            image_uploaded = assessment.practitioner_notes_image
+            if image_uploaded:
+                messages.success(request, 'Assessment saved with image! Processing notes...')
+                
+                # Initialize Azure Document Intelligence service
+                doc_service = AzureDocumentIntelligenceService()
+                
+                if doc_service.is_configured():
+                    try:
+                        # Get the full path to the image
+                        image_path = assessment.practitioner_notes_image.path
+                        
+                        # Process the document
+                        extracted_data = doc_service.analyze_document(image_path)
+                        
+                        if extracted_data:
+                            # Delete existing extracted findings for this assessment (if any)
+                            ExtractedFindings.objects.filter(assessment=assessment).delete()
+                            
+                            # Create ExtractedFindings records
+                            findings_created = 0
+                            for finding_data in extracted_data.get('findings', []):
+                                finding = ExtractedFindings.objects.create(
+                                    assessment=assessment,
+                                    category=finding_data.get('category', 'general'),
+                                    finding_type=finding_data.get('type', 'observation'),
+                                    text=finding_data.get('text', ''),
+                                    raw_extraction_data=extracted_data,
+                                )
+                                findings_created += 1
+                            
+                            if findings_created > 0:
+                                messages.success(
+                                    request,
+                                    f'Successfully extracted {findings_created} findings from the notes image!'
+                                )
+                                return redirect('health_records:view_extracted_findings', assessment_pk=assessment.pk)
+                            else:
+                                messages.info(request, 'Image processed but no findings were extracted. You can view the raw text in the assessment details.')
+                        else:
+                            messages.warning(request, 'Image uploaded but document intelligence processing failed. You can try processing it manually later.')
+                    except Exception as e:
+                        error_msg = str(e)
+                        logger.error(f"Error processing notes image automatically: {error_msg}")
+                        logger.exception("Full traceback:")
+                        messages.error(
+                            request,
+                            f'Error processing image: {error_msg}. Please check the image format (JPEG, PNG, PDF supported) and try again.'
+                        )
+                else:
+                    messages.info(request, 'Image uploaded successfully. Document intelligence is not configured, so the image was not processed automatically.')
+            
+            messages.success(request, 'Assessment created successfully!')
+            return redirect('clinicians:dashboard')
+    else:
+        form = PractitionerAssessmentForm(clinician=clinician)
+        # Pre-fill completed_at with current date/time
+        form.fields['completed_at'].initial = timezone.now()
+        # Pre-fill assessment_date with today
+        form.fields['assessment_date'].initial = timezone.now().date()
+        # Pre-set assessment_type for physiotherapists
+        if is_physiotherapist:
+            form.fields['assessment_type'].initial = 'physiotherapy'
+    
+    return render(request, 'clinicians/quick_upload_assessment.html', {
         'form': form,
         'patient': patient,
         'clinician': clinician,

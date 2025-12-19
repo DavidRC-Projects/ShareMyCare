@@ -21,6 +21,17 @@
             <p><strong>Patient:</strong> {{ patient.get_full_name|default:patient.username }}</p>
         </div>
         
+        {# Quick Upload Option #}
+        <div style="background: linear-gradient(135deg, rgba(32, 178, 170, 0.1) 0%, rgba(0, 113, 227, 0.1) 100%); padding: 1.5rem; border-radius: 8px; border: 2px solid #20B2AA; margin-bottom: 2rem; text-align: center;">
+            <h3 style="margin-top: 0; color: #20B2AA;">📷 Quick Note Upload</h3>
+            <p style="color: #666; font-size: 0.95rem; margin: 0.5rem 0 1rem 0;">
+                Upload a photo of your notes for quick assessment entry. Findings will be automatically extracted and displayed in a standardized table.
+            </p>
+            <a href="{% url 'clinicians:quick_upload_assessment' patient.id %}" class="btn btn-primary">
+                📷 Use Quick Upload
+            </a>
+        </div>
+        
         <form method="post" class="form" enctype="multipart/form-data" id="assessmentForm">
             {% csrf_token %}
             
@@ -29,6 +40,8 @@
                 <input type="hidden" name="assessment_type" value="physiotherapy" id="assessment_type_hidden">
             {% endif %}
             
+            {# Form Fields Section #}
+            <div id="form-fields-section">
             {% if is_physiotherapist %}
                 <h3 class="form-section-title">Subjective Assessment (Patient-Reported Symptoms)</h3>
                 
@@ -77,17 +90,10 @@
                     <p class="form-hint">Pain level from 0 (no pain) to 10 (worst pain)</p>
                 </div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--spacing-xl);">
-                    <h3 class="form-section-title" style="margin: 0;">Objective Assessment</h3>
-                    {% if is_physiotherapist %}
-                        <button type="button" class="btn btn-secondary" onclick="saveAndAddObjectiveMeasures()" style="margin-left: 1rem;">
-                            ➕ Add Detailed ROM & Strength
-                        </button>
-                    {% endif %}
-                </div>
+                <h3 class="form-section-title" style="margin-top: var(--spacing-xl);">Objective Assessment</h3>
                 <p class="form-hint" style="margin-top: 0.5rem;">
                     {% if is_physiotherapist %}
-                        Click the button above to add detailed range of motion and strength measurements for all joints.
+                        Add detailed range of motion and strength measurements using the button below.
                     {% endif %}
                 </p>
             {% else %}
@@ -154,38 +160,27 @@
                     <span class="field-error">{{ form.practitioner_notes.errors.0 }}</span>
                 {% endif %}
             </div>
+            </div> {# End form-fields-section #}
             
-            <div class="form-group">
-                <label for="{{ form.practitioner_notes_image.id_for_label }}">Photo of Notes</label>
-                <div class="file-upload-wrapper">
-                    <input type="file" name="{{ form.practitioner_notes_image.name }}" id="{{ form.practitioner_notes_image.id_for_label }}" class="form-file-input" accept="image/*" capture="environment" onchange="handleImageUpload(this)">
-                    <label for="{{ form.practitioner_notes_image.id_for_label }}" class="file-upload-label">
-                        <span class="file-upload-text">📷 Take Photo or Choose Image</span>
-                    </label>
+            <div class="form-actions" style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+                {% if is_physiotherapist %}
+                <div style="width: 100%; margin-bottom: 0.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="saveAndAddObjectiveMeasures()" style="flex: 0 0 auto;">
+                        ➕ Add Detailed ROM & Strength
+                    </button>
+                    <p class="form-hint" style="margin-top: 0.5rem; margin-bottom: 0;">
+                        Add detailed range of motion and strength measurements for all joints.
+                    </p>
                 </div>
-                <div id="image-upload-feedback" style="display: none; margin-top: 1rem; padding: 1rem; background-color: #e8f5e9; border-radius: 4px; border: 1px solid #4caf50;">
-                    <p style="margin: 0; color: #2e7d32; font-weight: 500;">✓ Image selected successfully!</p>
-                    <p id="image-filename" style="margin: 0.5rem 0 0 0; color: #2e7d32; font-size: 0.9rem;"></p>
-                </div>
-                <div id="image-preview-container" style="display: none; margin-top: 1rem;">
-                    <p style="margin-bottom: 0.5rem; font-weight: 500;">Preview:</p>
-                    <img id="image-preview" src="" alt="Preview" style="max-width: 100%; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; padding: 0.5rem; background: #f9f9f9;">
-                </div>
-                {% if form.practitioner_notes_image.errors %}
-                    <span class="field-error">{{ form.practitioner_notes_image.errors.0 }}</span>
                 {% endif %}
-                <p class="form-hint">You can take a photo of your notes or upload an existing image. The image will be automatically analyzed after saving.</p>
-            </div>
-            
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" style="flex: 0 0 auto;">
                     {% if is_physiotherapist %}
                         Save Assessment
                     {% else %}
                         Create Assessment
                     {% endif %}
                 </button>
-                <a href="{% url 'clinicians:dashboard' %}" class="btn btn-secondary">Cancel</a>
+                <a href="{% url 'clinicians:dashboard' %}" class="btn btn-secondary" style="flex: 0 0 auto;">Cancel</a>
             </div>
         </form>
     </div>
@@ -282,33 +277,6 @@ function saveAndAddObjectiveMeasures() {
     form.submit();
 }
 
-// Handle image upload feedback
-function handleImageUpload(input) {
-    const feedbackDiv = document.getElementById('image-upload-feedback');
-    const filenameDiv = document.getElementById('image-filename');
-    const previewContainer = document.getElementById('image-preview-container');
-    const previewImg = document.getElementById('image-preview');
-    
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-        
-        // Show feedback
-        feedbackDiv.style.display = 'block';
-        filenameDiv.textContent = `File: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
-        
-        // Show preview
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImg.src = e.target.result;
-            previewContainer.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    } else {
-        // Hide feedback if no file selected
-        feedbackDiv.style.display = 'none';
-        previewContainer.style.display = 'none';
-    }
-}
 </script>
 {% endblock %}
 

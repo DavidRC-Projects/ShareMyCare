@@ -50,9 +50,14 @@
         <!-- Patient Information -->
         <div class="dashboard-card">
             <div class="card-header">
-                <h2 class="card-title">Patient Information</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <h2 class="card-title">Patient Information</h2>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('patient-info')" id="toggle-btn-patient-info">
+                        <span id="toggle-icon-patient-info">▼</span> Show
+                    </button>
+                </div>
             </div>
-            <div class="card-content">
+            <div class="card-content" id="card-content-patient-info" style="display: none;">
                 <div class="info-grid">
                     <div class="info-item">
                         <label>Full Name:</label>
@@ -92,11 +97,16 @@
         {% if medications %}
         <div class="dashboard-card">
             <div class="card-header">
-                <h2 class="card-title">Active Medications ({{ medications|length }})</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <h2 class="card-title">Active Medications ({{ medications|length }})</h2>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('medications')" id="toggle-btn-medications">
+                        <span id="toggle-icon-medications">▼</span> Show
+                    </button>
+                </div>
             </div>
-            <div class="card-content">
+            <div class="card-content" id="card-content-medications" style="display: none;">
                 <div class="items-list">
-                    {% for medication in medications|slice:":5" %}
+                    {% for medication in medications %}
                     <div class="item-row">
                         <div class="item-info">
                             <h4>{{ medication.name }}</h4>
@@ -114,11 +124,6 @@
                     </div>
                     {% endfor %}
                 </div>
-                {% if medications|length > 5 %}
-                <div style="margin-top: 1rem; text-align: center;">
-                    <small style="color: var(--text-secondary);">Showing 5 of {{ medications|length }} medications</small>
-                </div>
-                {% endif %}
             </div>
         </div>
         {% endif %}
@@ -127,11 +132,16 @@
         {% if conditions %}
         <div class="dashboard-card">
             <div class="card-header">
-                <h2 class="card-title">Conditions ({{ conditions|length }})</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <h2 class="card-title">Conditions ({{ conditions|length }})</h2>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('conditions')" id="toggle-btn-conditions">
+                        <span id="toggle-icon-conditions">▼</span> Show
+                    </button>
+                </div>
             </div>
-            <div class="card-content">
+            <div class="card-content" id="card-content-conditions" style="display: none;">
                 <div class="items-list">
-                    {% for condition in conditions|slice:":5" %}
+                    {% for condition in conditions %}
                     <div class="item-row">
                         <div class="item-info">
                             <h4>{{ condition.name }}</h4>
@@ -146,11 +156,6 @@
                     </div>
                     {% endfor %}
                 </div>
-                {% if conditions|length > 5 %}
-                <div style="margin-top: 1rem; text-align: center;">
-                    <small style="color: var(--text-secondary);">Showing 5 of {{ conditions|length }} conditions</small>
-                </div>
-                {% endif %}
             </div>
         </div>
         {% endif %}
@@ -159,9 +164,14 @@
         {% if allergies %}
         <div class="dashboard-card">
             <div class="card-header">
-                <h2 class="card-title">Allergies ({{ allergies|length }})</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <h2 class="card-title">Allergies ({{ allergies|length }})</h2>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('allergies')" id="toggle-btn-allergies">
+                        <span id="toggle-icon-allergies">▼</span> Show
+                    </button>
+                </div>
             </div>
-            <div class="card-content">
+            <div class="card-content" id="card-content-allergies" style="display: none;">
                 <div class="items-list">
                     {% for allergy in allergies %}
                     <div class="item-row">
@@ -183,12 +193,17 @@
     <!-- Assessments Section -->
     <div class="dashboard-card" style="margin-top: 2rem;">
         <div class="card-header">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                 <h2 class="card-title">Assessments ({{ total_assessments }})</h2>
-                <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn btn-primary btn-sm">➕ Create New Assessment</a>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('assessments')" id="toggle-btn-assessments">
+                        <span id="toggle-icon-assessments">▼</span> Show
+                    </button>
+                    <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn btn-primary btn-sm">➕ Create New Assessment</a>
+                </div>
             </div>
         </div>
-        <div class="card-content">
+        <div class="card-content" id="card-content-assessments" style="display: none;">
             {% if assessments %}
             <div class="items-list">
                 {% for assessment in assessments %}
@@ -274,5 +289,36 @@
         </div>
     </div>
 </div>
+
+<script>
+function toggleCard(cardId) {
+    const cardContent = document.getElementById('card-content-' + cardId);
+    const toggleBtn = document.getElementById('toggle-btn-' + cardId);
+    const toggleIcon = document.getElementById('toggle-icon-' + cardId);
+    
+    if (cardContent.style.display === 'none') {
+        cardContent.style.display = 'block';
+        toggleIcon.textContent = '▲';
+        toggleBtn.innerHTML = '<span id="toggle-icon-' + cardId + '">▲</span> Hide';
+    } else {
+        cardContent.style.display = 'none';
+        toggleIcon.textContent = '▼';
+        toggleBtn.innerHTML = '<span id="toggle-icon-' + cardId + '">▼</span> Show';
+    }
+}
+
+// Close cards on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const cards = ['patient-info', 'medications', 'conditions', 'allergies', 'assessments'];
+        cards.forEach(function(cardId) {
+            const cardContent = document.getElementById('card-content-' + cardId);
+            if (cardContent && cardContent.style.display !== 'none') {
+                toggleCard(cardId);
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
 

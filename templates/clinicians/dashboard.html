@@ -50,6 +50,11 @@
                         <div style="font-size: 2rem; font-weight: 700; letter-spacing: 0.5rem; color: var(--primary-color); font-family: 'Courier New', monospace; padding: var(--spacing-sm) var(--spacing-md); background: white; border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                             {{ clinician.practitioner_code|default:"Generating..." }}
                         </div>
+                        <div style="margin-top: var(--spacing-sm);">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="openEmailModal()" style="width: 100%;">
+                                📧 Send Code by Email
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -71,8 +76,13 @@
                     </div>
                     <div class="card-content">
                         {% if patient_data.assessments %}
-                            <div class="items-list">
-                                {% for assessment in patient_data.assessments|slice:":5" %}
+                            <div style="margin-bottom: 1rem;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAssessments({{ patient_data.patient.id }})" id="toggle-btn-{{ patient_data.patient.id }}">
+                                    <span id="toggle-icon-{{ patient_data.patient.id }}">▼</span> <span id="toggle-text-{{ patient_data.patient.id }}">Show Assessments ({{ patient_data.assessments.count }})</span>
+                                </button>
+                            </div>
+                            <div class="items-list" id="assessments-{{ patient_data.patient.id }}" style="display: none;">
+                                {% for assessment in patient_data.assessments %}
                                     <div class="item-row">
                                         <div class="item-info">
                                             <h4>
@@ -197,5 +207,239 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Email Modal -->
+<div id="emailModal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeEmailModal()"></div>
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h2>Send Practitioner Code by Email</h2>
+            <button type="button" class="modal-close" onclick="closeEmailModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="emailForm" onsubmit="sendPractitionerCode(event)">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="client_email">Client Email Address</label>
+                    <input 
+                        type="email" 
+                        id="client_email" 
+                        name="client_email" 
+                        class="form-control" 
+                        placeholder="client@example.com"
+                        required
+                    >
+                    <p class="form-hint" style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                        Enter the email address of the client you want to share your practitioner code with.
+                    </p>
+                </div>
+                <div class="modal-footer" style="padding: 0; margin-top: var(--spacing-md);">
+                    <button type="button" class="btn btn-secondary" onclick="closeEmailModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Email</button>
+                </div>
+            </form>
+            <div id="emailStatus" style="display: none; margin-top: var(--spacing-sm);"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    border-radius: var(--radius-lg);
+    max-width: 500px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    padding: var(--spacing-md);
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.05) 0%, rgba(32, 178, 170, 0.05) 100%);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: var(--spacing-md);
+}
+
+.modal-footer {
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+}
+</style>
+
+<script>
+function toggleAssessments(patientId) {
+    const assessmentsDiv = document.getElementById('assessments-' + patientId);
+    const toggleIcon = document.getElementById('toggle-icon-' + patientId);
+    const toggleText = document.getElementById('toggle-text-' + patientId);
+    const assessmentCount = toggleText.textContent.match(/\d+/)[0];
+    
+    if (assessmentsDiv.style.display === 'none') {
+        assessmentsDiv.style.display = 'block';
+        toggleIcon.textContent = '▲';
+        toggleText.textContent = 'Hide Assessments (' + assessmentCount + ')';
+    } else {
+        assessmentsDiv.style.display = 'none';
+        toggleIcon.textContent = '▼';
+        toggleText.textContent = 'Show Assessments (' + assessmentCount + ')';
+    }
+}
+
+function openEmailModal() {
+    document.getElementById('emailModal').style.display = 'flex';
+    document.getElementById('client_email').focus();
+}
+
+function closeEmailModal() {
+    document.getElementById('emailModal').style.display = 'none';
+    document.getElementById('emailForm').reset();
+    document.getElementById('emailStatus').style.display = 'none';
+    document.getElementById('emailStatus').innerHTML = '';
+}
+
+function sendPractitionerCode(event) {
+    event.preventDefault();
+    
+    const form = document.getElementById('emailForm');
+    const formData = new FormData(form);
+    const statusDiv = document.getElementById('emailStatus');
+    const submitButton = form.querySelector('button[type="submit"]');
+    
+    // Show loading state
+    submitButton.disabled = true;
+    submitButton.textContent = 'Sending...';
+    statusDiv.style.display = 'none';
+    
+    // Add CSRF token
+    const csrftoken = getCookie('csrftoken');
+    
+    fetch('{% url "clinicians:send_practitioner_code_email" %}', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrftoken
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            statusDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+            statusDiv.style.display = 'block';
+            form.reset();
+            // Close modal after 2 seconds
+            setTimeout(() => {
+                closeEmailModal();
+            }, 2000);
+        } else {
+            statusDiv.innerHTML = `<div class="alert alert-error">${data.message}</div>`;
+            statusDiv.style.display = 'block';
+        }
+        submitButton.disabled = false;
+        submitButton.textContent = 'Send Email';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        statusDiv.innerHTML = '<div class="alert alert-error">An error occurred while sending the email. Please try again.</div>';
+        statusDiv.style.display = 'block';
+        submitButton.disabled = false;
+        submitButton.textContent = 'Send Email';
+    });
+}
+
+// Helper to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeEmailModal();
+    }
+});
+</script>
 {% endblock %}
 

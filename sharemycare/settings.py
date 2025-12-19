@@ -151,6 +151,20 @@ LOGOUT_REDIRECT_URL = '/'
 # Allauth settings
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
+# Email Configuration
+# For development, emails will be printed to console
+# For production, configure SMTP settings in .env file
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@sharemycare.com')
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# SMTP Settings (for production - set in .env file)
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

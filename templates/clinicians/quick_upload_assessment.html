@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quick Note Upload - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1 class="form-title">📷 Quick Note Upload</h1>
+            <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn-close">✕</a>
+        </div>
+        
+        <div class="patient-info-box">
+            <p><strong>Patient:</strong> {{ patient.get_full_name|default:patient.username }}</p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border: 2px dashed #20B2AA; margin-bottom: 2rem;">
+            <div style="margin-bottom: 1rem;">
+                <h3 style="margin-top: 0; color: #20B2AA;">Quick Assessment Entry</h3>
+                <p style="color: #666; font-size: 0.95rem; line-height: 1.6; margin: 0.5rem 0;">
+                    Upload a photo of your notes for quick assessment entry. Our AI system will automatically extract key findings and organize them into a standardized table by category (measurements, symptoms, treatments, etc.).
+                </p>
+                <button type="button" class="btn btn-link" style="padding: 0; margin-top: 0.5rem; font-size: 0.875rem; color: #20B2AA;" onclick="showImageGuidanceModal()">
+                    ℹ️ Learn more about this feature
+                </button>
+            </div>
+        </div>
+        
+        <form method="post" class="form" enctype="multipart/form-data" id="quickUploadForm">
+            {% csrf_token %}
+            
+            {# Hidden input to ensure assessment_type submits for physiotherapists #}
+            {% if is_physiotherapist %}
+                <input type="hidden" name="assessment_type" value="physiotherapy" id="assessment_type_hidden">
+            {% endif %}
+            
+            {# Minimal required fields #}
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.assessment_date.id_for_label }}">Assessment Date *</label>
+                    {{ form.assessment_date }}
+                    {% if form.assessment_date.errors %}
+                        <span class="field-error">{{ form.assessment_date.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.completed_at.id_for_label }}">Date & Time Completed *</label>
+                    {{ form.completed_at }}
+                    {% if form.completed_at.errors %}
+                        <span class="field-error">{{ form.completed_at.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {# Image Upload #}
+            <div class="form-group">
+                <label for="{{ form.practitioner_notes_image.id_for_label }}">Photo of Notes *</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" name="{{ form.practitioner_notes_image.name }}" id="{{ form.practitioner_notes_image.id_for_label }}" class="form-file-input" accept="image/*" capture="environment" onchange="handleImageUpload(this)" required>
+                    <label for="{{ form.practitioner_notes_image.id_for_label }}" class="file-upload-label">
+                        <span class="file-upload-text">📷 Take Photo or Choose Image</span>
+                    </label>
+                </div>
+                <div id="image-upload-feedback" style="display: none; margin-top: 1rem; padding: 1rem; background-color: #e8f5e9; border-radius: 4px; border: 1px solid #4caf50;">
+                    <p style="margin: 0; color: #2e7d32; font-weight: 500;">✓ Image selected successfully!</p>
+                    <p id="image-filename" style="margin: 0.5rem 0 0 0; color: #2e7d32; font-size: 0.9rem;"></p>
+                </div>
+                <div id="image-preview-container" style="display: none; margin-top: 1rem;">
+                    <p style="margin-bottom: 0.5rem; font-weight: 500;">Preview:</p>
+                    <img id="image-preview" src="" alt="Preview" style="max-width: 100%; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; padding: 0.5rem; background: #f9f9f9;">
+                </div>
+                {% if form.practitioner_notes_image.errors %}
+                    <span class="field-error">{{ form.practitioner_notes_image.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <input type="hidden" name="quick_save_with_image" value="1">
+            
+            <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-start;">
+                <button type="submit" class="btn btn-primary" style="flex: 0 0 auto;">
+                    💾 Save & Process Image
+                </button>
+                <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn btn-secondary" style="flex: 0 0 auto;">Fill in Full Details Instead</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Handle image upload feedback
+function handleImageUpload(input) {
+    const feedbackDiv = document.getElementById('image-upload-feedback');
+    const filenameDiv = document.getElementById('image-filename');
+    const previewContainer = document.getElementById('image-preview-container');
+    const previewImg = document.getElementById('image-preview');
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Show feedback
+        feedbackDiv.style.display = 'block';
+        filenameDiv.textContent = `File: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            previewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        // Hide feedback if no file selected
+        feedbackDiv.style.display = 'none';
+        previewContainer.style.display = 'none';
+    }
+}
+
+// Show guidance modal
+function showImageGuidanceModal() {
+    const modal = document.getElementById('imageGuidanceModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
+
+function closeImageGuidanceModal() {
+    const modal = document.getElementById('imageGuidanceModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Set default dates on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const assessmentDate = document.getElementById('{{ form.assessment_date.id_for_label }}');
+    const completedAt = document.getElementById('{{ form.completed_at.id_for_label }}');
+    
+    // Set today's date if not set
+    if (assessmentDate && !assessmentDate.value) {
+        const today = new Date().toISOString().split('T')[0];
+        assessmentDate.value = today;
+    }
+    
+    // Set current datetime if not set
+    if (completedAt && !completedAt.value) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        completedAt.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+});
+</script>
+
+<!-- Image Guidance Modal -->
+<div id="imageGuidanceModal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeImageGuidanceModal()"></div>
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h2>Quick Note Upload Feature</h2>
+            <button type="button" class="modal-close" onclick="closeImageGuidanceModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <h3 style="margin-top: 0;">How It Works</h3>
+            <ol style="line-height: 1.8;">
+                <li><strong>Upload your notes:</strong> Take a photo or upload an image of your handwritten or typed notes.</li>
+                <li><strong>Automatic processing:</strong> Our AI system extracts key findings from your notes using Azure Document Intelligence.</li>
+                <li><strong>Standardized table:</strong> Findings are automatically organized into a standardized table by category (measurements, symptoms, treatments, etc.).</li>
+                <li><strong>Quick save:</strong> Save immediately with just the image and required fields.</li>
+            </ol>
+            
+            <h3 style="margin-top: 1.5rem;">Benefits</h3>
+            <ul style="line-height: 1.8;">
+                <li>Save time by avoiding manual data entry</li>
+                <li>Ensure consistency with standardized findings format</li>
+                <li>Reduce transcription errors</li>
+                <li>Maintain complete records with original notes image</li>
+            </ul>
+            
+            <h3 style="margin-top: 1.5rem;">Supported Formats</h3>
+            <p>JPEG, PNG, and PDF files are supported. For best results, ensure your notes are clear and well-lit.</p>
+        </div>
+        <div class="modal-footer" style="padding: 1rem; border-top: 1px solid #e0e0e0; text-align: right;">
+            <button type="button" class="btn btn-primary" onclick="closeImageGuidanceModal()">Got it</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

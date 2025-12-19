@@ -25,12 +25,17 @@
                         <p class="card-count">{{ medications.count }} medication{{ medications.count|pluralize }}</p>
                     </div>
                 </div>
-                <a href="{% url 'health_records:add_medication' %}" class="btn btn-primary btn-sm">Add +</a>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('medications')" id="toggle-btn-medications">
+                        <span id="toggle-icon-medications">▼</span> Show
+                    </button>
+                    <a href="{% url 'health_records:add_medication' %}" class="btn btn-primary btn-sm">Add +</a>
+                </div>
             </div>
-            <div class="card-content">
+            <div class="card-content" id="card-content-medications" style="display: none;">
                 {% if medications %}
                     <div class="items-list">
-                        {% for medication in medications|slice:":3" %}
+                        {% for medication in medications %}
                             <div class="item-row">
                                 <div class="item-info">
                                     <div class="item-header">
@@ -62,9 +67,6 @@
                                 </div>
                             </div>
                         {% endfor %}
-                        {% if medications.count > 3 %}
-                            <p class="more-items">+ {{ medications.count|add:"-3" }} more medication{{ medications.count|add:"-3"|pluralize }}</p>
-                        {% endif %}
                     </div>
                 {% else %}
                     <div class="empty-state">
@@ -85,12 +87,17 @@
                         <p class="card-count">{{ conditions.count }} condition{{ conditions.count|pluralize }}</p>
                     </div>
                 </div>
-                <a href="{% url 'health_records:add_condition' %}" class="btn btn-primary btn-sm">Add +</a>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('conditions')" id="toggle-btn-conditions">
+                        <span id="toggle-icon-conditions">▼</span> Show
+                    </button>
+                    <a href="{% url 'health_records:add_condition' %}" class="btn btn-primary btn-sm">Add +</a>
+                </div>
             </div>
-            <div class="card-content">
+            <div class="card-content" id="card-content-conditions" style="display: none;">
                 {% if conditions %}
                     <div class="items-list">
-                        {% for condition in conditions|slice:":3" %}
+                        {% for condition in conditions %}
                             <div class="item-row">
                                 <div class="item-info">
                                     <h4>{{ condition.name }}</h4>
@@ -107,9 +114,6 @@
                                 </div>
                             </div>
                         {% endfor %}
-                        {% if conditions.count > 3 %}
-                            <p class="more-items">+ {{ conditions.count|add:"-3" }} more condition{{ conditions.count|add:"-3"|pluralize }}</p>
-                        {% endif %}
                     </div>
                 {% else %}
                     <div class="empty-state">
@@ -130,12 +134,17 @@
                         <p class="card-count">{{ allergies.count }} allerg{{ allergies.count|pluralize:"y,ies" }}</p>
                     </div>
                 </div>
-                <a href="{% url 'health_records:add_allergy' %}" class="btn btn-primary btn-sm">Add +</a>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('allergies')" id="toggle-btn-allergies">
+                        <span id="toggle-icon-allergies">▼</span> Show
+                    </button>
+                    <a href="{% url 'health_records:add_allergy' %}" class="btn btn-primary btn-sm">Add +</a>
+                </div>
             </div>
-            <div class="card-content">
+            <div class="card-content" id="card-content-allergies" style="display: none;">
                 {% if allergies %}
                     <div class="items-list">
-                        {% for allergy in allergies|slice:":3" %}
+                        {% for allergy in allergies %}
                             <div class="item-row">
                                 <div class="item-info">
                                     <h4>{{ allergy.allergen }}</h4>
@@ -150,9 +159,6 @@
                                 </div>
                             </div>
                         {% endfor %}
-                        {% if allergies.count > 3 %}
-                            <p class="more-items">+ {{ allergies.count|add:"-3" }} more allerg{{ allergies.count|add:"-3"|pluralize:"y,ies" }}</p>
-                        {% endif %}
                     </div>
                 {% else %}
                     <div class="empty-state">
@@ -173,12 +179,17 @@
                         <p class="card-count">{{ assessments.count }} assessment{{ assessments.count|pluralize }}</p>
                     </div>
                 </div>
-                <a href="{% url 'health_records:add_assessment' %}" class="btn btn-primary btn-sm">Add +</a>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('assessments')" id="toggle-btn-assessments">
+                        <span id="toggle-icon-assessments">▼</span> Show
+                    </button>
+                    <a href="{% url 'health_records:add_assessment' %}" class="btn btn-primary btn-sm">Add +</a>
+                </div>
             </div>
-            <div class="card-content">
+            <div class="card-content" id="card-content-assessments" style="display: none;">
                 {% if assessments %}
                     <div class="items-list">
-                        {% for assessment in assessments|slice:":3" %}
+                        {% for assessment in assessments %}
                             <div class="item-row">
                                 <div class="item-info">
                                     <div class="item-header">
@@ -223,68 +234,6 @@
                             </div>
                         {% endfor %}
                     </div>
-                    
-                    {% if assessments.count > 3 %}
-                        <!-- Show All Button -->
-                        <div style="margin-top: var(--spacing-sm); text-align: center;">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllAssessments()" id="toggleAssessmentsBtn">
-                                Show All {{ assessments.count }} Assessments
-                            </button>
-                        </div>
-                        
-                        <!-- Hidden Assessments -->
-                        <div class="items-list" id="hiddenAssessments" style="display: none; margin-top: var(--spacing-sm); padding-top: var(--spacing-sm); border-top: 1px solid var(--border-color);">
-                            {% for assessment in assessments|slice:"3:" %}
-                                <div class="item-row">
-                                    <div class="item-info">
-                                        <div class="item-header">
-                                            <h4>
-                                                {% if assessment.symptom_date %}
-                                                    {{ assessment.symptom_date|date:"d M Y" }}
-                                                {% elif assessment.assessment_date %}
-                                                    {{ assessment.assessment_date|date:"d M Y" }}
-                                                {% else %}
-                                                    Assessment
-                                                {% endif %}
-                                            </h4>
-                                            {% if assessment.has_practitioner_data %}
-                                                <span class="practitioner-badge" title="Practitioner assessment available">👨‍⚕️</span>
-                                            {% endif %}
-                                        </div>
-                                        <p class="item-details">
-                                            {% if assessment.current_symptoms %}
-                                                {{ assessment.current_symptoms|truncatewords:15 }}
-                                            {% elif assessment.pain_level is not None %}
-                                                Pain Level: {{ assessment.pain_level }}/10
-                                            {% else %}
-                                                Assessment entry
-                                            {% endif %}
-                                        </p>
-                                        <div class="item-badges">
-                                            {% if assessment.pain_level is not None %}
-                                                <span class="badge badge-pain-{{ assessment.pain_level|floatformat:0 }}">Pain: {{ assessment.pain_level }}/10</span>
-                                            {% endif %}
-                                            {% if assessment.has_practitioner_data %}
-                                                <span class="badge badge-primary">Practitioner Assessment</span>
-                                            {% endif %}
-                                            {% if assessment.practitioner_notes_image %}
-                                                <span class="prescription-badge" title="Practitioner notes photo available">📷</span>
-                                                {% if assessment.extracted_findings.exists %}
-                                                    <button type="button" class="badge badge-info" title="View extracted findings" onclick="showFindingsModal({{ assessment.pk }})">📋 Findings</button>
-                                                {% else %}
-                                                    <button type="button" class="badge badge-primary" title="Extract findings from notes" onclick="extractAndShowFindings({{ assessment.pk }})">🔍 Extract</button>
-                                                {% endif %}
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    <div class="item-actions">
-                                        <button type="button" class="btn-open" onclick='openAssessmentModal({{ assessment.pk }}, "{{ assessment.symptom_date|date:"d M Y"|default:"Assessment" }}", `{{ assessment.current_symptoms|escapejs }}`, `{{ assessment.previous_symptoms|escapejs }}`, `{{ assessment.condition_progression|escapejs }}`, "{{ assessment.pain_level|default:"" }}", `{{ assessment.objective_findings|escapejs }}`, `{{ assessment.treatment_plan|escapejs }}`, `{{ assessment.practitioner_notes|escapejs }}`, {{ assessment.has_practitioner_data|yesno:"true,false" }})'>Open</button>
-                                        <a href="{% url 'health_records:delete_assessment' assessment.pk %}" class="btn-icon btn-icon-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this assessment? Your clinicians will be notified of the deletion.');">🗑️</a>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
                 {% else %}
                     <div class="empty-state">
                         <p>No assessments recorded yet.</p>
@@ -304,12 +253,17 @@
                         <p class="card-count">{{ clinician_accesses.count }} clinician{{ clinician_accesses.count|pluralize }} with access</p>
                     </div>
                 </div>
-                <a href="{% url 'health_records:invite_clinician' %}" class="btn btn-primary btn-sm">Invite +</a>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('clinicians')" id="toggle-btn-clinicians">
+                        <span id="toggle-icon-clinicians">▼</span> Show
+                    </button>
+                    <a href="{% url 'health_records:invite_clinician' %}" class="btn btn-primary btn-sm">Invite +</a>
+                </div>
             </div>
-            <div class="card-content">
+            <div class="card-content" id="card-content-clinicians" style="display: none;">
                 {% if clinician_accesses %}
                     <div class="items-list">
-                        {% for access in clinician_accesses|slice:":3" %}
+                        {% for access in clinician_accesses %}
                             <div class="item-row">
                                 <div class="item-info">
                                     <h4>{{ access.clinician.full_name }}</h4>
@@ -356,9 +310,14 @@
                         <h2 class="card-title">Personal Information</h2>
                     </div>
                 </div>
-                <a href="{% url 'health_records:edit_profile' %}" class="btn btn-primary btn-sm">Edit</a>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('personal-info')" id="toggle-btn-personal-info">
+                        <span id="toggle-icon-personal-info">▼</span> Show
+                    </button>
+                    <a href="{% url 'health_records:edit_profile' %}" class="btn btn-primary btn-sm">Edit</a>
+                </div>
             </div>
-            <div class="card-content">
+            <div class="card-content" id="card-content-personal-info" style="display: none;">
                 <div class="profile-info">
                     <div class="info-row">
                         <span class="info-label">Date of Birth:</span>
@@ -382,12 +341,17 @@
                         <p class="card-count">{{ current_work.count }} job{{ current_work.count|pluralize }}</p>
                     </div>
                 </div>
-                <a href="{% url 'health_records:add_work_history' %}" class="btn btn-primary btn-sm">Add +</a>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('current-work')" id="toggle-btn-current-work">
+                        <span id="toggle-icon-current-work">▼</span> Show
+                    </button>
+                    <a href="{% url 'health_records:add_work_history' %}" class="btn btn-primary btn-sm">Add +</a>
+                </div>
             </div>
-            <div class="card-content">
+            <div class="card-content" id="card-content-current-work" style="display: none;">
                 {% if current_work %}
                     <div class="items-list">
-                        {% for work in current_work|slice:":3" %}
+                        {% for work in current_work %}
                             <div class="item-row">
                                 <div class="item-info">
                                     <h4>{{ work.job_title }}</h4>
@@ -410,9 +374,6 @@
                                 </div>
                             </div>
                         {% endfor %}
-                        {% if current_work.count > 3 %}
-                            <p class="more-items">+ {{ current_work.count|add:"-3" }} more job{{ current_work.count|add:"-3"|pluralize }}</p>
-                        {% endif %}
                     </div>
                 {% else %}
                     <div class="empty-state">
@@ -433,12 +394,17 @@
                         <p class="card-count">{{ previous_work.count }} job{{ previous_work.count|pluralize }}</p>
                     </div>
                 </div>
-                <a href="{% url 'health_records:add_work_history' %}" class="btn btn-primary btn-sm">Add +</a>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('previous-work')" id="toggle-btn-previous-work">
+                        <span id="toggle-icon-previous-work">▼</span> Show
+                    </button>
+                    <a href="{% url 'health_records:add_work_history' %}" class="btn btn-primary btn-sm">Add +</a>
+                </div>
             </div>
-            <div class="card-content">
+            <div class="card-content" id="card-content-previous-work" style="display: none;">
                 {% if previous_work %}
                     <div class="items-list">
-                        {% for work in previous_work|slice:":3" %}
+                        {% for work in previous_work %}
                             <div class="item-row">
                                 <div class="item-info">
                                     <h4>{{ work.job_title }}</h4>
@@ -461,9 +427,6 @@
                                 </div>
                             </div>
                         {% endfor %}
-                        {% if previous_work.count > 3 %}
-                            <p class="more-items">+ {{ previous_work.count|add:"-3" }} more job{{ previous_work.count|add:"-3"|pluralize }}</p>
-                        {% endif %}
                     </div>
                 {% else %}
                     <div class="empty-state">
@@ -484,12 +447,17 @@
                         <p class="card-count">{{ feedback.count }} feedback entr{{ feedback.count|pluralize:"y,ies" }}</p>
                     </div>
                 </div>
-                <a href="{% url 'health_records:add_feedback' %}" class="btn btn-primary btn-sm">Add +</a>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('feedback')" id="toggle-btn-feedback">
+                        <span id="toggle-icon-feedback">▼</span> Show
+                    </button>
+                    <a href="{% url 'health_records:add_feedback' %}" class="btn btn-primary btn-sm">Add +</a>
+                </div>
             </div>
-            <div class="card-content">
+            <div class="card-content" id="card-content-feedback" style="display: none;">
                 {% if feedback %}
                     <div class="items-list">
-                        {% for item in feedback|slice:":3" %}
+                        {% for item in feedback %}
                             <div class="item-row">
                                 <div class="item-info">
                                     <h4>{{ item.organisation }}</h4>
@@ -510,9 +478,6 @@
                                 </div>
                             </div>
                         {% endfor %}
-                        {% if feedback.count > 3 %}
-                            <p class="more-items">+ {{ feedback.count|add:"-3" }} more entr{{ feedback.count|add:"-3"|pluralize:"y,ies" }}</p>
-                        {% endif %}
                         <div style="margin-top: var(--spacing-sm);">
                             <a href="{% url 'health_records:view_feedback' %}" class="btn btn-secondary btn-sm">View All Feedback</a>
                         </div>
@@ -550,9 +515,14 @@
                         <h2 class="card-title">Emergency Contacts</h2>
                     </div>
                 </div>
-                <a href="{% url 'health_records:edit_profile' %}" class="btn btn-primary btn-sm">Edit</a>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('emergency-contacts')" id="toggle-btn-emergency-contacts">
+                        <span id="toggle-icon-emergency-contacts">▼</span> Show
+                    </button>
+                    <a href="{% url 'health_records:edit_profile' %}" class="btn btn-primary btn-sm">Edit</a>
+                </div>
             </div>
-            <div class="card-content">
+            <div class="card-content" id="card-content-emergency-contacts" style="display: none;">
                 <div class="profile-info">
                     {% if profile.emergency_contact_name %}
                         <div class="info-row">
@@ -796,17 +766,19 @@
 </style>
 
 <script>
-function toggleAllAssessments() {
-    const hiddenSection = document.getElementById('hiddenAssessments');
-    const btn = document.getElementById('toggleAssessmentsBtn');
+function toggleCard(cardId) {
+    const cardContent = document.getElementById('card-content-' + cardId);
+    const toggleIcon = document.getElementById('toggle-icon-' + cardId);
+    const toggleBtn = document.getElementById('toggle-btn-' + cardId);
     
-    if (hiddenSection.style.display === 'none') {
-        hiddenSection.style.display = 'block';
-        btn.textContent = 'Show Less';
+    if (cardContent.style.display === 'none') {
+        cardContent.style.display = 'block';
+        toggleIcon.textContent = '▲';
+        toggleBtn.innerHTML = '<span id="toggle-icon-' + cardId + '">▲</span> Hide';
     } else {
-        hiddenSection.style.display = 'none';
-        const count = {{ assessments.count }};
-        btn.textContent = `Show All ${count} Assessments`;
+        cardContent.style.display = 'none';
+        toggleIcon.textContent = '▼';
+        toggleBtn.innerHTML = '<span id="toggle-icon-' + cardId + '">▼</span> Show';
     }
 }
 

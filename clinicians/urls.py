@@ -12,7 +12,9 @@ urlpatterns = [
     path('profile/edit/', views.edit_clinician_profile, name='edit_profile'),
     path('profile/delete/', views.delete_clinician_profile, name='delete_profile'),
     path('patient/<int:patient_id>/assessment/create/', views.create_assessment, name='create_assessment'),
+    path('patient/<int:patient_id>/assessment/quick-upload/', views.quick_upload_assessment, name='quick_upload_assessment'),
     path('objective-measures/<int:assessment_pk>/add/', views.add_objective_measures, name='add_objective_measures'),
     path('objective-measures/<int:pk>/edit/', views.edit_objective_measures, name='edit_objective_measures'),
+    path('send-practitioner-code/', views.send_practitioner_code_email, name='send_practitioner_code_email'),
 ]
 
