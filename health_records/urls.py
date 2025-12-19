@@ -6,6 +6,9 @@ app_name = 'health_records'
 urlpatterns = [
     path('', views.home, name='home'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('onboarding/', views.onboarding, name='onboarding'),
+    path('passport/', views.passport_view, name='passport'),
+    path('emergency-card/', views.emergency_card, name='emergency_card'),
     
     # Medication URLs
     path('medications/add/', views.add_medication, name='add_medication'),

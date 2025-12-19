@@ -19,88 +19,99 @@
     </div>
 
     <!-- Quick Stats -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-        <div class="card">
-            <div class="card-body" style="text-align: center;">
-                <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">{{ total_assessments }}</div>
-                <div style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.875rem;">Total Assessments</div>
+    <div class="client-stats-overview">
+        <div class="client-stat-card">
+            <div class="client-stat-card-icon">📋</div>
+            <div class="client-stat-card-content">
+                <div class="client-stat-card-value">{{ total_assessments }}</div>
+                <div class="client-stat-card-label">Assessments</div>
             </div>
         </div>
-        <div class="card">
-            <div class="card-body" style="text-align: center;">
-                <div style="font-size: 2rem; font-weight: 700; color: var(--success-color);">{{ medications|length }}</div>
-                <div style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.875rem;">Medications</div>
+        <div class="client-stat-card">
+            <div class="client-stat-card-icon">💊</div>
+            <div class="client-stat-card-content">
+                <div class="client-stat-card-value">{{ medications|length }}</div>
+                <div class="client-stat-card-label">Medications</div>
             </div>
         </div>
-        <div class="card">
-            <div class="card-body" style="text-align: center;">
-                <div style="font-size: 2rem; font-weight: 700; color: var(--warning-color);">{{ conditions|length }}</div>
-                <div style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.875rem;">Conditions</div>
+        <div class="client-stat-card">
+            <div class="client-stat-card-icon">🏥</div>
+            <div class="client-stat-card-content">
+                <div class="client-stat-card-value">{{ conditions|length }}</div>
+                <div class="client-stat-card-label">Conditions</div>
             </div>
         </div>
-        <div class="card">
-            <div class="card-body" style="text-align: center;">
-                <div style="font-size: 2rem; font-weight: 700; color: var(--danger-color);">{{ allergies|length }}</div>
-                <div style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.875rem;">Allergies</div>
+        <div class="client-stat-card">
+            <div class="client-stat-card-icon">⚠️</div>
+            <div class="client-stat-card-content">
+                <div class="client-stat-card-value">{{ allergies|length }}</div>
+                <div class="client-stat-card-label">Allergies</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Information Section -->
+    <div class="dashboard-card patient-info-card">
+        <div class="card-header">
+            <div class="card-header-content">
+                <div class="card-title-group">
+                    <div class="card-icon-emoji">👤</div>
+                    <h2 class="card-title">Patient Information</h2>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('patient-info')" id="toggle-btn-patient-info">
+                    <span id="toggle-icon-patient-info">▼</span> <span class="toggle-text">Show</span>
+                </button>
+            </div>
+        </div>
+        <div class="card-content" id="card-content-patient-info" style="display: none;">
+            <div class="info-grid">
+                <div class="info-item">
+                    <label class="info-label">Full Name:</label>
+                    <span class="info-value">{{ patient.get_full_name|default:"Not provided" }}</span>
+                </div>
+                <div class="info-item">
+                    <label class="info-label">Username:</label>
+                    <span class="info-value">{{ patient.username }}</span>
+                </div>
+                <div class="info-item">
+                    <label class="info-label">Email:</label>
+                    <span class="info-value">{{ patient.email|default:"Not provided" }}</span>
+                </div>
+                {% if profile %}
+                <div class="info-item">
+                    <label class="info-label">Date of Birth:</label>
+                    <span class="info-value">{{ profile.date_of_birth|date:"F d, Y"|default:"Not provided" }}</span>
+                </div>
+                <div class="info-item">
+                    <label class="info-label">Phone:</label>
+                    <span class="info-value">{{ profile.phone|default:"Not provided" }}</span>
+                </div>
+                {% endif %}
+                <div class="info-item">
+                    <label class="info-label">Access Level:</label>
+                    <span class="info-value"><span class="badge badge-info">{{ access.get_access_level_display }}</span></span>
+                </div>
+                <div class="info-item">
+                    <label class="info-label">Access Granted:</label>
+                    <span class="info-value">{{ access.granted_at|date:"F d, Y" }}</span>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="dashboard-grid">
-        <!-- Patient Information -->
-        <div class="dashboard-card">
-            <div class="card-header">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <h2 class="card-title">Patient Information</h2>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('patient-info')" id="toggle-btn-patient-info">
-                        <span id="toggle-icon-patient-info">▼</span> Show
-                    </button>
-                </div>
-            </div>
-            <div class="card-content" id="card-content-patient-info" style="display: none;">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Full Name:</label>
-                        <span>{{ patient.get_full_name|default:"Not provided" }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Username:</label>
-                        <span>{{ patient.username }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Email:</label>
-                        <span>{{ patient.email|default:"Not provided" }}</span>
-                    </div>
-                    {% if profile %}
-                    <div class="info-item">
-                        <label>Date of Birth:</label>
-                        <span>{{ profile.date_of_birth|date:"F d, Y"|default:"Not provided" }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Phone:</label>
-                        <span>{{ profile.phone|default:"Not provided" }}</span>
-                    </div>
-                    {% endif %}
-                    <div class="info-item">
-                        <label>Access Level:</label>
-                        <span class="badge badge-info">{{ access.get_access_level_display }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Access Granted:</label>
-                        <span>{{ access.granted_at|date:"F d, Y" }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Active Medications -->
         {% if medications %}
         <div class="dashboard-card">
             <div class="card-header">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <h2 class="card-title">Active Medications ({{ medications|length }})</h2>
+                <div class="card-header-content">
+                    <div class="card-title-group">
+                        <div class="card-icon-emoji">💊</div>
+                        <h2 class="card-title">Active Medications ({{ medications|length }})</h2>
+                    </div>
                     <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('medications')" id="toggle-btn-medications">
-                        <span id="toggle-icon-medications">▼</span> Show
+                        <span id="toggle-icon-medications">▼</span> <span class="toggle-text">Show</span>
                     </button>
                 </div>
             </div>
@@ -132,10 +143,13 @@
         {% if conditions %}
         <div class="dashboard-card">
             <div class="card-header">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <h2 class="card-title">Conditions ({{ conditions|length }})</h2>
+                <div class="card-header-content">
+                    <div class="card-title-group">
+                        <div class="card-icon-emoji">🏥</div>
+                        <h2 class="card-title">Conditions ({{ conditions|length }})</h2>
+                    </div>
                     <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('conditions')" id="toggle-btn-conditions">
-                        <span id="toggle-icon-conditions">▼</span> Show
+                        <span id="toggle-icon-conditions">▼</span> <span class="toggle-text">Show</span>
                     </button>
                 </div>
             </div>
@@ -164,10 +178,13 @@
         {% if allergies %}
         <div class="dashboard-card">
             <div class="card-header">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <h2 class="card-title">Allergies ({{ allergies|length }})</h2>
+                <div class="card-header-content">
+                    <div class="card-title-group">
+                        <div class="card-icon-emoji">⚠️</div>
+                        <h2 class="card-title">Allergies ({{ allergies|length }})</h2>
+                    </div>
                     <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('allergies')" id="toggle-btn-allergies">
-                        <span id="toggle-icon-allergies">▼</span> Show
+                        <span id="toggle-icon-allergies">▼</span> <span class="toggle-text">Show</span>
                     </button>
                 </div>
             </div>
@@ -191,13 +208,16 @@
     </div>
 
     <!-- Assessments Section -->
-    <div class="dashboard-card" style="margin-top: 2rem;">
+    <div class="dashboard-card assessments-card" style="margin-top: 2rem;">
         <div class="card-header">
-            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <h2 class="card-title">Assessments ({{ total_assessments }})</h2>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <div class="card-header-content">
+                <div class="card-title-group">
+                    <div class="card-icon-emoji">📋</div>
+                    <h2 class="card-title">Assessments ({{ total_assessments }})</h2>
+                </div>
+                <div class="card-actions-group">
                     <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('assessments')" id="toggle-btn-assessments">
-                        <span id="toggle-icon-assessments">▼</span> Show
+                        <span id="toggle-icon-assessments">▼</span> <span class="toggle-text">Show</span>
                     </button>
                     <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn btn-primary btn-sm">➕ Create New Assessment</a>
                 </div>
@@ -290,20 +310,160 @@
     </div>
 </div>
 
+<style>
+/* Client Detail Page Styles */
+.client-stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.client-stat-card {
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.05) 0%, rgba(32, 178, 170, 0.05) 100%);
+    border: 1px solid rgba(0, 113, 227, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.client-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.client-stat-card-icon {
+    font-size: 2.5rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.client-stat-card-content {
+    flex: 1;
+}
+
+.client-stat-card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1.2;
+}
+
+.client-stat-card-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.patient-info-card {
+    margin-bottom: 2rem;
+}
+
+.card-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 1rem;
+}
+
+.card-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.card-icon-emoji {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.toggle-text {
+    margin-left: 0.25rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.assessments-card {
+    border-top: 3px solid var(--primary-color);
+}
+
+.card-actions-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .client-stats-overview {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .card-header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .card-actions-group {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .client-stats-overview {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
 <script>
 function toggleCard(cardId) {
     const cardContent = document.getElementById('card-content-' + cardId);
     const toggleBtn = document.getElementById('toggle-btn-' + cardId);
     const toggleIcon = document.getElementById('toggle-icon-' + cardId);
+    const toggleText = toggleBtn.querySelector('.toggle-text');
     
     if (cardContent.style.display === 'none') {
         cardContent.style.display = 'block';
         toggleIcon.textContent = '▲';
-        toggleBtn.innerHTML = '<span id="toggle-icon-' + cardId + '">▲</span> Hide';
+        toggleText.textContent = 'Hide';
     } else {
         cardContent.style.display = 'none';
         toggleIcon.textContent = '▼';
-        toggleBtn.innerHTML = '<span id="toggle-icon-' + cardId + '">▼</span> Show';
+        toggleText.textContent = 'Show';
     }
 }
 

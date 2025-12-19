@@ -69,21 +69,23 @@
                 <h4>Product</h4>
                 <ul>
                     <li><a href="{% url 'health_records:home' %}#about">How It Works</a></li>
-                    <li><a href="#security">Security</a></li>
+                    <li><a href="{% url 'security' %}">Security</a></li>
                 </ul>
             </div>
             <div class="footer-section">
                 <h4>Support</h4>
                 <ul>
-                    <li><a href="#help">Help Center</a></li>
-                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="{% url 'help_center' %}">Help Center</a></li>
+                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                    <li><a href="{% url 'support' %}">Support</a></li>
                 </ul>
             </div>
             <div class="footer-section">
                 <h4>Legal</h4>
                 <ul>
-                    <li><a href="#privacy">Privacy</a></li>
-                    <li><a href="#terms">Terms</a></li>
+                    <li><a href="{% url 'privacy' %}">Privacy</a></li>
+                    <li><a href="{% url 'terms' %}">Terms</a></li>
+                    <li><a href="{% url 'legal' %}">Legal</a></li>
                 </ul>
             </div>
         </div>
@@ -91,6 +93,58 @@
             <p>&copy; 2025 ShareMyCare. All rights reserved.</p>
         </div>
     </footer>
+
+    {% if user.is_authenticated and not is_clinician %}
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <a href="{% url 'health_records:dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Home</span>
+        </a>
+        <a href="{% url 'health_records:dashboard' %}#records" class="nav-item">
+            <span class="nav-icon">📋</span>
+            <span class="nav-label">Records</span>
+        </a>
+        <button class="nav-item nav-fab" id="quickAddFab" onclick="toggleQuickAddMenu()" aria-label="Quick Add">
+            <span class="nav-icon">➕</span>
+        </button>
+        <a href="{% url 'health_records:invite_clinician' %}" class="nav-item {% if request.resolver_match.url_name == 'invite_clinician' %}active{% endif %}">
+            <span class="nav-icon">👨‍⚕️</span>
+            <span class="nav-label">Share</span>
+        </a>
+        <a href="{% url 'health_records:edit_profile' %}" class="nav-item {% if request.resolver_match.url_name == 'edit_profile' %}active{% endif %}">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Profile</span>
+        </a>
+    </nav>
+
+    <!-- Quick Add Menu (FAB Menu) -->
+    <div class="fab-menu" id="fabMenu" style="display: none;">
+        <div class="fab-menu-overlay" onclick="toggleQuickAddMenu()"></div>
+        <div class="fab-menu-content">
+            <a href="{% url 'health_records:add_medication' %}" class="fab-menu-item" onclick="toggleQuickAddMenu()">
+                <span class="fab-icon">💊</span>
+                <span class="fab-label">Add Medication</span>
+            </a>
+            <a href="{% url 'health_records:add_condition' %}" class="fab-menu-item" onclick="toggleQuickAddMenu()">
+                <span class="fab-icon">🏥</span>
+                <span class="fab-label">Add Condition</span>
+            </a>
+            <a href="{% url 'health_records:add_allergy' %}" class="fab-menu-item" onclick="toggleQuickAddMenu()">
+                <span class="fab-icon">⚠️</span>
+                <span class="fab-label">Add Allergy</span>
+            </a>
+            <a href="{% url 'health_records:add_assessment' %}" class="fab-menu-item" onclick="toggleQuickAddMenu()">
+                <span class="fab-icon">📋</span>
+                <span class="fab-label">Add Assessment</span>
+            </a>
+            <a href="{% url 'health_records:add_work_history' %}" class="fab-menu-item" onclick="toggleQuickAddMenu()">
+                <span class="fab-icon">💼</span>
+                <span class="fab-label">Add Work History</span>
+            </a>
+        </div>
+    </div>
+    {% endif %}
 
     {% block extra_js %}{% endblock %}
     <script>
@@ -138,6 +192,27 @@
                     }, 300);
                 }, 5000); // Hide after 5 seconds
             });
+        });
+
+        // Quick Add FAB Menu Toggle
+        function toggleQuickAddMenu() {
+            const menu = document.getElementById('fabMenu');
+            if (menu) {
+                if (menu.style.display === 'none') {
+                    menu.style.display = 'block';
+                } else {
+                    menu.style.display = 'none';
+                }
+            }
+        }
+
+        // Close FAB menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const fabMenu = document.getElementById('fabMenu');
+            const fabButton = document.getElementById('quickAddFab');
+            if (fabMenu && fabButton && !fabMenu.contains(event.target) && !fabButton.contains(event.target)) {
+                fabMenu.style.display = 'none';
+            }
         });
     </script>
 </body>

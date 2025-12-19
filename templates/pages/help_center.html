@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Help Center - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">Help Center</h1>
+        <p class="page-subtitle">Find answers to common questions</p>
+    </div>
+
+    <div class="page-content">
+        <section class="content-section">
+            <h2>Getting Started</h2>
+            <div class="help-category">
+                <h3>Creating Your Account</h3>
+                <p>To get started with ShareMyCare:</p>
+                <ol>
+                    <li>Click "Get Started" on the homepage</li>
+                    <li>Fill in your registration details</li>
+                    <li>Verify your email address</li>
+                    <li>Start adding your health information</li>
+                </ol>
+            </div>
+
+            <div class="help-category">
+                <h3>Adding Health Information</h3>
+                <p>You can add various types of health information:</p>
+                <ul>
+                    <li><strong>Medications:</strong> Current and past medications with dosages</li>
+                    <li><strong>Conditions:</strong> Medical conditions and diagnoses</li>
+                    <li><strong>Allergies:</strong> Known allergies and reactions</li>
+                    <li><strong>Assessments:</strong> Health assessments and notes</li>
+                    <li><strong>Work History:</strong> Current and previous employment</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="content-section">
+            <h2>Sharing with Clinicians</h2>
+            <div class="help-category">
+                <h3>Using Practitioner Codes</h3>
+                <p>To share your records using a practitioner code:</p>
+                <ol>
+                    <li>Go to your dashboard</li>
+                    <li>Click "Share with Clinicians"</li>
+                    <li>Enter the practitioner code provided by your clinician</li>
+                    <li>Select the access level you want to grant</li>
+                    <li>Confirm the sharing</li>
+                </ol>
+            </div>
+
+            <div class="help-category">
+                <h3>Inviting Clinicians by Email</h3>
+                <p>You can also invite clinicians via email:</p>
+                <ol>
+                    <li>Go to "Share with Clinicians" in your dashboard</li>
+                    <li>Click "Invite +"</li>
+                    <li>Enter the clinician's email address</li>
+                    <li>Select access level and permissions</li>
+                    <li>Send the invitation</li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="content-section">
+            <h2>For Healthcare Professionals</h2>
+            <div class="help-category">
+                <h3>Creating a Clinician Account</h3>
+                <p>Healthcare professionals can create an account to access patient records:</p>
+                <ol>
+                    <li>Click "Healthcare Professional login" on the homepage</li>
+                    <li>Fill in your professional details</li>
+                    <li>Complete your profile with registration information</li>
+                    <li>Start connecting with patients</li>
+                </ol>
+            </div>
+
+            <div class="help-category">
+                <h3>Creating Assessments</h3>
+                <p>Clinicians can create assessments for their patients:</p>
+                <ul>
+                    <li>Use the quick upload feature to photograph notes</li>
+                    <li>Fill in detailed assessment forms</li>
+                    <li>Add objective measures and findings</li>
+                    <li>Extract findings automatically from note images</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="content-section">
+            <h2>Still Need Help?</h2>
+            <p>If you can't find what you're looking for, please <a href="{% url 'contact' %}">contact our support team</a>.</p>
+        </section>
+    </div>
+</div>
+
+<style>
+.page-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.page-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+}
+
+.page-content {
+    line-height: 1.8;
+}
+
+.content-section {
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: var(--bg-white);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.content-section h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.help-category {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-light);
+    border-radius: 8px;
+}
+
+.help-category h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.help-category ol,
+.help-category ul {
+    margin-left: 1.5rem;
+    margin-top: 1rem;
+}
+
+.help-category li {
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.help-category a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .content-section {
+        padding: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+

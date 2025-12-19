@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.conf import settings
+from django.urls import reverse
 from .models import Medication, Condition, Allergy, Assessment, WorkHistory, ExtractedFindings
 from accounts.models import UserProfile
 from .forms import (
@@ -20,9 +21,83 @@ def home(request):
 
 
 @login_required
+def onboarding(request):
+    """Onboarding wizard for new users"""
+    profile = request.user.profile
+    step = request.GET.get('step', 'welcome')
+    
+    # Check if already completed
+    if profile.onboarding_completed and step == 'welcome':
+        return redirect('health_records:dashboard')
+    
+    steps = ['welcome', 'profile', 'medications', 'conditions', 'allergies', 'complete']
+    current_step_index = steps.index(step) if step in steps else 0
+    
+    context = {
+        'current_step': step,
+        'steps': steps,
+        'current_step_index': current_step_index,
+        'total_steps': len(steps),
+        'progress': int((current_step_index + 1) / len(steps) * 100)
+    }
+    
+    if request.method == 'POST' and step == 'complete':
+        profile.onboarding_completed = True
+        profile.save()
+        messages.success(request, 'Welcome to ShareMyCare! Your profile is set up.')
+        return redirect('health_records:dashboard')
+    
+    return render(request, 'health_records/onboarding.html', context)
+
+
+@login_required
+def passport_view(request):
+    """Passport-style card view of health records"""
+    user = request.user
+    
+    context = {
+        'medications': user.medications.filter(is_active=True),
+        'conditions': user.conditions.filter(status='active'),
+        'allergies': user.allergies.all(),
+        'assessments': user.assessments.all().order_by('-assessment_date', '-created_at')[:5],
+        'profile': user.profile,
+        'clinician_accesses': user.clinician_accesses.filter(is_active=True).count(),
+    }
+    
+    return render(request, 'health_records/passport.html', context)
+
+
+@login_required
+def emergency_card(request):
+    """Emergency access card with critical information"""
+    user = request.user
+    profile = user.profile
+    
+    context = {
+        'medications': user.medications.filter(is_active=True),
+        'allergies': user.allergies.all(),
+        'conditions': user.conditions.filter(status='active'),
+        'profile': profile,
+        'emergency_contact': {
+            'name': profile.emergency_contact_name,
+            'phone': profile.emergency_contact_phone,
+            'relationship': profile.emergency_contact_relationship,
+        } if profile else None,
+    }
+    
+    return render(request, 'health_records/emergency_card.html', context)
+
+
+@login_required
 def dashboard(request):
     """User dashboard view"""
     user = request.user
+    profile = user.profile
+    
+    # Check if onboarding is needed
+    if not profile.onboarding_completed:
+        return redirect('health_records:onboarding')
+    
     work_history = user.work_history.all()
     current_work = work_history.filter(is_current=True)
     previous_work = work_history.filter(is_current=False)
@@ -33,6 +108,22 @@ def dashboard(request):
     feedback = user.healthcare_feedback.all()
     invitations = ClinicianInvitation.objects.filter(patient=user).order_by('-created_at')
     
+    # Calculate profile completion
+    completed_items = 0
+    total_items = 6
+    if profile.date_of_birth:
+        completed_items += 1
+    if profile.phone_number:
+        completed_items += 1
+    if profile.emergency_contact_name:
+        completed_items += 1
+    if user.medications.count() > 0:
+        completed_items += 1
+    if user.conditions.count() > 0:
+        completed_items += 1
+    if user.allergies.count() > 0:
+        completed_items += 1
+    
     context = {
         'medications': user.medications.all(),
         'conditions': user.conditions.all(),
@@ -41,10 +132,15 @@ def dashboard(request):
         'work_history': work_history,
         'current_work': current_work,
         'previous_work': previous_work,
-        'profile': user.profile,
+        'profile': profile,
         'clinician_accesses': clinician_accesses,
         'feedback': feedback,
         'invitations': invitations,
+        'profile_completion': {
+            'completed': completed_items,
+            'total': total_items,
+            'percent': int((completed_items / total_items) * 100) if total_items > 0 else 0,
+        },
     }
     return render(request, 'health_records/dashboard.html', context)
 
@@ -53,6 +149,10 @@ def dashboard(request):
 @login_required
 def add_medication(request):
     """Add a new medication"""
+    # Check if user is in onboarding
+    is_onboarding = not request.user.profile.onboarding_completed
+    next_step = request.GET.get('next', 'conditions') if is_onboarding else None
+    
     if request.method == 'POST':
         form = MedicationForm(request.POST, request.FILES)
         if form.is_valid():
@@ -60,10 +160,18 @@ def add_medication(request):
             medication.user = request.user
             medication.save()
             messages.success(request, 'Medication added successfully!')
+            # Redirect to next onboarding step if in onboarding, otherwise dashboard
+            if is_onboarding:
+                return redirect(f"{reverse('health_records:onboarding')}?step={next_step}")
             return redirect('health_records:dashboard')
     else:
         form = MedicationForm()
-    return render(request, 'health_records/forms/medication_form.html', {'form': form, 'action': 'Add'})
+    return render(request, 'health_records/forms/medication_form.html', {
+        'form': form, 
+        'action': 'Add',
+        'is_onboarding': is_onboarding,
+        'next_step': next_step
+    })
 
 
 @login_required
@@ -96,6 +204,10 @@ def delete_medication(request, pk):
 @login_required
 def add_condition(request):
     """Add a new condition"""
+    # Check if user is in onboarding
+    is_onboarding = not request.user.profile.onboarding_completed
+    next_step = request.GET.get('next', 'allergies') if is_onboarding else None
+    
     if request.method == 'POST':
         form = ConditionForm(request.POST)
         if form.is_valid():
@@ -103,10 +215,18 @@ def add_condition(request):
             condition.user = request.user
             condition.save()
             messages.success(request, 'Condition added successfully!')
+            # Redirect to next onboarding step if in onboarding, otherwise dashboard
+            if is_onboarding:
+                return redirect(f"{reverse('health_records:onboarding')}?step={next_step}")
             return redirect('health_records:dashboard')
     else:
         form = ConditionForm()
-    return render(request, 'health_records/forms/condition_form.html', {'form': form, 'action': 'Add'})
+    return render(request, 'health_records/forms/condition_form.html', {
+        'form': form, 
+        'action': 'Add',
+        'is_onboarding': is_onboarding,
+        'next_step': next_step
+    })
 
 
 @login_required
@@ -139,6 +259,10 @@ def delete_condition(request, pk):
 @login_required
 def add_allergy(request):
     """Add a new allergy"""
+    # Check if user is in onboarding
+    is_onboarding = not request.user.profile.onboarding_completed
+    next_step = request.GET.get('next', 'complete') if is_onboarding else None
+    
     if request.method == 'POST':
         form = AllergyForm(request.POST)
         if form.is_valid():
@@ -146,10 +270,18 @@ def add_allergy(request):
             allergy.user = request.user
             allergy.save()
             messages.success(request, 'Allergy added successfully!')
+            # Redirect to next onboarding step if in onboarding, otherwise dashboard
+            if is_onboarding:
+                return redirect(f"{reverse('health_records:onboarding')}?step={next_step}")
             return redirect('health_records:dashboard')
     else:
         form = AllergyForm()
-    return render(request, 'health_records/forms/allergy_form.html', {'form': form, 'action': 'Add'})
+    return render(request, 'health_records/forms/allergy_form.html', {
+        'form': form, 
+        'action': 'Add',
+        'is_onboarding': is_onboarding,
+        'next_step': next_step
+    })
 
 
 @login_required
@@ -338,15 +470,26 @@ def edit_practitioner_assessment(request, pk):
 def edit_profile(request):
     """Edit user profile"""
     profile = request.user.profile
+    # Check if user is in onboarding
+    is_onboarding = not profile.onboarding_completed
+    next_step = request.GET.get('next', 'medications') if is_onboarding else None
+    
     if request.method == 'POST':
         form = UserProfileForm(request.POST, instance=profile)
         if form.is_valid():
             form.save()
             messages.success(request, 'Profile updated successfully!')
+            # Redirect to next onboarding step if in onboarding, otherwise dashboard
+            if is_onboarding:
+                return redirect(f"{reverse('health_records:onboarding')}?step={next_step}")
             return redirect('health_records:dashboard')
     else:
         form = UserProfileForm(instance=profile)
-    return render(request, 'health_records/forms/profile_form.html', {'form': form})
+    return render(request, 'health_records/forms/profile_form.html', {
+        'form': form,
+        'is_onboarding': is_onboarding,
+        'next_step': next_step
+    })
 
 
 # Work History Views

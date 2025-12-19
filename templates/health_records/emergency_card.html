@@ -1,0 +1,381 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Emergency Card - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="emergency-container">
+    <div class="emergency-header">
+        <div class="emergency-icon">🚨</div>
+        <h1 class="emergency-title">Emergency Medical Information</h1>
+        <p class="emergency-subtitle">Critical information for emergency responders</p>
+    </div>
+
+    <div class="emergency-card">
+        <div class="card-top">
+            <div class="emergency-badge">EMERGENCY</div>
+            <div class="qr-placeholder">
+                <span class="qr-icon">📱</span>
+                <p class="qr-text">QR Code</p>
+            </div>
+        </div>
+
+        <div class="card-content">
+            <!-- Personal Information -->
+            <section class="emergency-section">
+                <h3 class="section-title">Personal Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Name:</span>
+                        <span class="info-value">{{ profile.user.get_full_name|default:profile.user.username }}</span>
+                    </div>
+                    {% if profile.date_of_birth %}
+                    <div class="info-item">
+                        <span class="info-label">Date of Birth:</span>
+                        <span class="info-value">{{ profile.date_of_birth|date:"M d, Y" }}</span>
+                    </div>
+                    {% endif %}
+                    {% if profile.phone_number %}
+                    <div class="info-item">
+                        <span class="info-label">Phone:</span>
+                        <span class="info-value">{{ profile.phone_number }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Emergency Contact -->
+            {% if emergency_contact.name %}
+            <section class="emergency-section">
+                <h3 class="section-title">Emergency Contact</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Name:</span>
+                        <span class="info-value">{{ emergency_contact.name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Relationship:</span>
+                        <span class="info-value">{{ emergency_contact.relationship }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Phone:</span>
+                        <span class="info-value emergency-phone">{{ emergency_contact.phone }}</span>
+                    </div>
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- Critical Allergies -->
+            <section class="emergency-section emergency-critical">
+                <h3 class="section-title critical-title">⚠️ Critical Allergies</h3>
+                {% if allergies %}
+                    <div class="allergy-list">
+                        {% for allergy in allergies %}
+                            <div class="allergy-item severity-{{ allergy.severity }}">
+                                <strong>{{ allergy.allergen }}</strong>
+                                {% if allergy.severity %}
+                                    <span class="severity-badge">{{ allergy.get_severity_display }}</span>
+                                {% endif %}
+                                {% if allergy.reaction %}
+                                    <p class="reaction-text">{{ allergy.reaction }}</p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="no-info">No known allergies</p>
+                {% endif %}
+            </section>
+
+            <!-- Current Medications -->
+            <section class="emergency-section">
+                <h3 class="section-title">Current Medications</h3>
+                {% if medications %}
+                    <div class="medication-list">
+                        {% for med in medications %}
+                            <div class="medication-item">
+                                <strong>{{ med.name }}</strong>
+                                {% if med.dosage %}<span>{{ med.dosage }}</span>{% endif %}
+                                {% if med.frequency %}<span>{{ med.frequency }}</span>{% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="no-info">No current medications</p>
+                {% endif %}
+            </section>
+
+            <!-- Active Conditions -->
+            <section class="emergency-section">
+                <h3 class="section-title">Active Medical Conditions</h3>
+                {% if conditions %}
+                    <div class="condition-list">
+                        {% for condition in conditions %}
+                            <div class="condition-item">
+                                <strong>{{ condition.name }}</strong>
+                                {% if condition.diagnosis_date %}
+                                    <span>Since {{ condition.diagnosis_date|date:"Y" }}</span>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="no-info">No active conditions</p>
+                {% endif %}
+            </section>
+        </div>
+
+        <div class="card-footer">
+            <p class="footer-text">ShareMyCare Emergency Card</p>
+            <p class="footer-text-small">Keep this accessible in case of emergency</p>
+        </div>
+    </div>
+
+    <div class="emergency-actions">
+        <button onclick="window.print()" class="btn btn-primary">Print Card</button>
+        <a href="{% url 'health_records:passport' %}" class="btn btn-secondary">Back to Passport</a>
+        <a href="{% url 'health_records:dashboard' %}" class="btn btn-secondary">Dashboard</a>
+    </div>
+</div>
+
+<style>
+.emergency-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    padding-bottom: 100px;
+}
+
+.emergency-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.emergency-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.emergency-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #dc3545;
+    margin-bottom: 0.5rem;
+}
+
+.emergency-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.emergency-card {
+    background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
+    border: 3px solid #dc3545;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 8px 30px rgba(220, 53, 69, 0.2);
+    margin-bottom: 2rem;
+}
+
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #dc3545;
+}
+
+.emergency-badge {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #dc3545;
+    letter-spacing: 3px;
+}
+
+.qr-placeholder {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-light);
+    border-radius: 8px;
+    border: 2px dashed var(--border-color);
+}
+
+.qr-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.qr-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.emergency-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.emergency-section:last-of-type {
+    border-bottom: none;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.critical-title {
+    color: #dc3545;
+}
+
+.info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background: var(--bg-light);
+    border-radius: 8px;
+}
+
+.info-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.info-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.emergency-phone {
+    color: #dc3545;
+    font-weight: 700;
+    font-size: 1.125rem;
+}
+
+.allergy-list,
+.medication-list,
+.condition-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.allergy-item,
+.medication-item,
+.condition-item {
+    padding: 1rem;
+    background: var(--bg-light);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.allergy-item.severity-severe {
+    background: #ffe5e5;
+    border-left: 4px solid #dc3545;
+}
+
+.allergy-item.severity-moderate {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+}
+
+.allergy-item strong {
+    color: var(--text-primary);
+    font-size: 1.125rem;
+}
+
+.reaction-text {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.severity-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #dc3545;
+    color: white;
+}
+
+.no-info {
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+    padding: 1rem;
+}
+
+.card-footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border-color);
+    text-align: center;
+}
+
+.footer-text {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0.25rem 0;
+}
+
+.footer-text-small {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.emergency-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+@media print {
+    .emergency-container {
+        padding: 0;
+    }
+    
+    .emergency-actions {
+        display: none;
+    }
+    
+    .emergency-card {
+        border: 2px solid #000;
+        box-shadow: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .emergency-card {
+        padding: 1.5rem;
+    }
+    
+    .emergency-title {
+        font-size: 1.75rem;
+    }
+    
+    .card-top {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}
+

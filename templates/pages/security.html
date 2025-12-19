@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Security - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">Security</h1>
+        <p class="page-subtitle">Your data security and privacy are our top priorities</p>
+    </div>
+
+    <div class="page-content">
+        <section class="content-section">
+            <h2>Data Protection</h2>
+            <p>ShareMyCare uses industry-standard security measures to protect your health information:</p>
+            <ul>
+                <li><strong>Encryption:</strong> All data is encrypted in transit using HTTPS/TLS protocols</li>
+                <li><strong>Secure Storage:</strong> Your data is stored securely in compliance with healthcare data protection standards</li>
+                <li><strong>Access Control:</strong> Only you and authorized clinicians you grant access to can view your information</li>
+                <li><strong>Authentication:</strong> Strong password requirements and secure login processes</li>
+            </ul>
+        </section>
+
+        <section class="content-section">
+            <h2>Privacy Controls</h2>
+            <p>You have complete control over your data:</p>
+            <ul>
+                <li>You decide which clinicians can access your records</li>
+                <li>You can revoke access at any time</li>
+                <li>You can set different access levels for different clinicians</li>
+                <li>All access is logged and auditable</li>
+            </ul>
+        </section>
+
+        <section class="content-section">
+            <h2>Compliance</h2>
+            <p>ShareMyCare is designed with healthcare data protection in mind:</p>
+            <ul>
+                <li>Follows best practices for healthcare data security</li>
+                <li>Regular security audits and updates</li>
+                <li>Compliance with data protection regulations</li>
+            </ul>
+        </section>
+
+        <section class="content-section">
+            <h2>Reporting Security Issues</h2>
+            <p>If you discover a security vulnerability, please contact us immediately at <a href="{% url 'contact' %}">security@sharemycare.com</a>. We take all security concerns seriously and will respond promptly.</p>
+        </section>
+    </div>
+</div>
+
+<style>
+.page-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.page-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+}
+
+.page-content {
+    line-height: 1.8;
+}
+
+.content-section {
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: var(--bg-white);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.content-section h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.content-section p {
+    font-size: 1.125rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.content-section ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.content-section ul li {
+    padding: 0.75rem 0;
+    padding-left: 2rem;
+    position: relative;
+    font-size: 1.0625rem;
+    color: var(--text-primary);
+}
+
+.content-section ul li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.content-section a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+.content-section a:hover {
+    color: var(--primary-hover);
+}
+
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .content-section {
+        padding: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+

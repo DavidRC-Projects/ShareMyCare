@@ -160,6 +160,28 @@
                     <span class="field-error">{{ form.practitioner_notes.errors.0 }}</span>
                 {% endif %}
             </div>
+            
+            <div class="form-group">
+                <label for="{{ form.practitioner_notes_image.id_for_label }}">📷 Photo of Notes (Optional)</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" name="{{ form.practitioner_notes_image.name }}" id="{{ form.practitioner_notes_image.id_for_label }}" class="form-file-input" accept="image/*" capture="environment" onchange="handleImageUpload(this)">
+                    <label for="{{ form.practitioner_notes_image.id_for_label }}" class="file-upload-label">
+                        <span class="file-upload-text">📷 Take Photo or Choose Image</span>
+                    </label>
+                </div>
+                <div id="image-upload-feedback" style="display: none; margin-top: 1rem; padding: 1rem; background-color: #e8f5e9; border-radius: 4px; border: 1px solid #4caf50;">
+                    <p style="margin: 0; color: #2e7d32; font-weight: 500;">✓ Image selected successfully!</p>
+                    <p id="image-filename" style="margin: 0.5rem 0 0 0; color: #2e7d32; font-size: 0.9rem;"></p>
+                </div>
+                <div id="image-preview-container" style="display: none; margin-top: 1rem;">
+                    <p style="margin-bottom: 0.5rem; font-weight: 500;">Preview:</p>
+                    <img id="image-preview" src="" alt="Preview" style="max-width: 100%; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; padding: 0.5rem; background: #f9f9f9;">
+                </div>
+                {% if form.practitioner_notes_image.errors %}
+                    <span class="field-error">{{ form.practitioner_notes_image.errors.0 }}</span>
+                {% endif %}
+                <p class="form-hint">Take a photo of your notes or upload an image. Findings can be automatically extracted after saving.</p>
+            </div>
             </div> {# End form-fields-section #}
             
             <div class="form-actions" style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
@@ -275,6 +297,31 @@ function saveAndAddObjectiveMeasures() {
     
     // Submit the form
     form.submit();
+}
+
+// Handle image upload and preview
+function handleImageUpload(input) {
+    const feedbackDiv = document.getElementById('image-upload-feedback');
+    const filenameDiv = document.getElementById('image-filename');
+    const previewContainer = document.getElementById('image-preview-container');
+    const previewImg = document.getElementById('image-preview');
+
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+
+        feedbackDiv.style.display = 'block';
+        filenameDiv.textContent = `File: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            previewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        feedbackDiv.style.display = 'none';
+        previewContainer.style.display = 'none';
+    }
 }
 
 </script>

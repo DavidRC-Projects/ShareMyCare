@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Privacy Policy - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">Privacy Policy</h1>
+        <p class="page-subtitle">Last updated: {{ "now"|date:"F d, Y" }}</p>
+    </div>
+
+    <div class="page-content">
+        <section class="content-section">
+            <h2>Introduction</h2>
+            <p>ShareMyCare ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.</p>
+        </section>
+
+        <section class="content-section">
+            <h2>Information We Collect</h2>
+            <h3>Personal Information</h3>
+            <p>We collect information that you provide directly to us, including:</p>
+            <ul>
+                <li>Name, email address, and contact information</li>
+                <li>Date of birth and demographic information</li>
+                <li>Health information you choose to enter (medications, conditions, allergies, assessments)</li>
+                <li>Account credentials and authentication information</li>
+            </ul>
+
+            <h3>Usage Information</h3>
+            <p>We automatically collect certain information about your use of the platform:</p>
+            <ul>
+                <li>Device information and browser type</li>
+                <li>IP address and location data</li>
+                <li>Usage patterns and interactions with the platform</li>
+            </ul>
+        </section>
+
+        <section class="content-section">
+            <h2>How We Use Your Information</h2>
+            <p>We use the information we collect to:</p>
+            <ul>
+                <li>Provide and maintain the ShareMyCare platform</li>
+                <li>Process your requests and transactions</li>
+                <li>Enable sharing of your health information with authorized clinicians</li>
+                <li>Improve our services and user experience</li>
+                <li>Send you important updates and notifications</li>
+                <li>Ensure security and prevent fraud</li>
+            </ul>
+        </section>
+
+        <section class="content-section">
+            <h2>Information Sharing</h2>
+            <p>We do not sell your personal information. We only share your information:</p>
+            <ul>
+                <li><strong>With your explicit consent:</strong> When you grant access to specific clinicians</li>
+                <li><strong>For legal compliance:</strong> When required by law or to protect rights and safety</li>
+                <li><strong>With service providers:</strong> Trusted third parties who assist in operating our platform (under strict confidentiality agreements)</li>
+            </ul>
+        </section>
+
+        <section class="content-section">
+            <h2>Your Rights</h2>
+            <p>You have the right to:</p>
+            <ul>
+                <li>Access your personal information</li>
+                <li>Correct inaccurate information</li>
+                <li>Delete your account and data</li>
+                <li>Control who has access to your health information</li>
+                <li>Revoke access granted to clinicians at any time</li>
+                <li>Export your data</li>
+            </ul>
+        </section>
+
+        <section class="content-section">
+            <h2>Data Security</h2>
+            <p>We implement industry-standard security measures to protect your information, including encryption, secure authentication, and regular security audits. For more details, see our <a href="{% url 'security' %}">Security page</a>.</p>
+        </section>
+
+        <section class="content-section">
+            <h2>Contact Us</h2>
+            <p>If you have questions about this Privacy Policy, please <a href="{% url 'contact' %}">contact us</a>.</p>
+        </section>
+    </div>
+</div>
+
+<style>
+.page-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.page-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+}
+
+.page-content {
+    line-height: 1.8;
+}
+
+.content-section {
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: var(--bg-white);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.content-section h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.content-section h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.content-section p {
+    font-size: 1.0625rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.content-section ul {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 1rem;
+}
+
+.content-section ul li {
+    padding: 0.75rem 0;
+    padding-left: 2rem;
+    position: relative;
+    color: var(--text-primary);
+}
+
+.content-section ul li:before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+.content-section a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .content-section {
+        padding: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+

@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact Us - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">Contact Us</h1>
+        <p class="page-subtitle">Get in touch with our team</p>
+    </div>
+
+    <div class="page-content">
+        <section class="content-section">
+            <h2>Get in Touch</h2>
+            <p>We'd love to hear from you. Whether you have a question, feedback, or need support, we're here to help.</p>
+            
+            <div class="contact-methods">
+                <div class="contact-method">
+                    <h3>📧 Email</h3>
+                    <p><strong>General Inquiries:</strong><br>
+                    <a href="mailto:info@sharemycare.com">info@sharemycare.com</a></p>
+                    <p><strong>Support:</strong><br>
+                    <a href="mailto:support@sharemycare.com">support@sharemycare.com</a></p>
+                    <p><strong>Security Issues:</strong><br>
+                    <a href="mailto:security@sharemycare.com">security@sharemycare.com</a></p>
+                </div>
+                
+                <div class="contact-method">
+                    <h3>⏰ Response Times</h3>
+                    <p>We aim to respond to all inquiries within 24-48 hours during business days.</p>
+                    <p>For urgent security issues, please mark your email as "URGENT" in the subject line.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-section">
+            <h2>Before You Contact Us</h2>
+            <p>You might find the answer you're looking for in our help resources:</p>
+            <ul>
+                <li><a href="{% url 'help_center' %}">Help Center</a> - Comprehensive guides and FAQs</li>
+                <li><a href="{% url 'support' %}">Support Page</a> - Common questions and support options</li>
+                <li><a href="{% url 'security' %}">Security Information</a> - Learn about our security measures</li>
+            </ul>
+        </section>
+
+        <section class="content-section">
+            <h2>Feedback</h2>
+            <p>We're always looking to improve ShareMyCare. If you have suggestions, feature requests, or feedback, please don't hesitate to reach out. Your input helps us build a better platform for everyone.</p>
+        </section>
+    </div>
+</div>
+
+<style>
+.page-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.page-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+}
+
+.page-content {
+    line-height: 1.8;
+}
+
+.content-section {
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: var(--bg-white);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.content-section h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.contact-methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.contact-method {
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.05) 0%, rgba(32, 178, 170, 0.05) 100%);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.contact-method h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.contact-method p {
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.contact-method a {
+    color: var(--primary-color);
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.contact-method a:hover {
+    color: var(--primary-hover);
+}
+
+.content-section ul {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 1rem;
+}
+
+.content-section ul li {
+    padding: 0.75rem 0;
+    padding-left: 2rem;
+    position: relative;
+    color: var(--text-primary);
+}
+
+.content-section ul li:before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.content-section ul li a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .content-section {
+        padding: 1.5rem;
+    }
+    
+    .contact-methods {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+

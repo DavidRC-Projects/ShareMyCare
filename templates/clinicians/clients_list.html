@@ -12,218 +12,759 @@
                 <p class="dashboard-subtitle">Manage and view all your patients</p>
             </div>
             <div class="dashboard-header-actions">
-                <a href="{% url 'clinicians:dashboard' %}" class="btn btn-secondary">Dashboard</a>
+                <a href="{% url 'clinicians:dashboard' %}" class="btn btn-secondary btn-standard">Dashboard</a>
             </div>
-        </div>
-    </div>
-
-    <!-- Search Bar -->
-    <div class="card" style="margin-bottom: 2rem;">
-        <div class="card-body">
-            <form method="get" action="{% url 'clinicians:clients_list' %}" class="search-form">
-                <div class="search-form-row">
-                    <input 
-                        type="text" 
-                        name="search" 
-                        value="{{ search_query }}"
-                        placeholder="Search clients by name, username, or email..." 
-                        class="form-control search-input"
-                    >
-                    <button type="submit" class="btn btn-primary">Search</button>
-                    {% if search_query %}
-                    <a href="{% url 'clinicians:clients_list' %}" class="btn btn-secondary">Clear</a>
-                    {% endif %}
-                </div>
-            </form>
         </div>
     </div>
 
     <!-- Stats Summary -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-        <div class="card">
-            <div class="card-body" style="text-align: center;">
-                <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">{{ total_clients }}</div>
-                <div style="color: var(--text-secondary); margin-top: 0.5rem;">Total Clients</div>
+    <div class="stats-summary-grid" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-content">
+                <div class="stat-value">{{ total_clients }}</div>
+                <div class="stat-label">Total Clients</div>
             </div>
         </div>
+        {% if clients_data %}
+        <div class="stat-card" id="total-assessments-stat">
+            <div class="stat-icon">📋</div>
+            <div class="stat-content">
+                <div class="stat-value" id="total-assessments-value">{{ total_assessments|default:0 }}</div>
+                <div class="stat-label">Total Assessments</div>
+                <div class="stat-hint">Hover over a client to see their assessment count</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-content">
+                <div class="stat-value">{{ active_clients_count|default:0 }}</div>
+                <div class="stat-label">Active Clients</div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
-    <!-- Clients Grid -->
+    <!-- Search Bar -->
+    <div class="search-card">
+        <form method="get" action="{% url 'clinicians:clients_list' %}" class="search-form">
+            <div class="search-input-wrapper">
+                <input 
+                    type="text" 
+                    name="search" 
+                    value="{{ search_query }}"
+                    placeholder="Search clients by name, username, or email..." 
+                    class="search-input"
+                >
+                {% if search_query %}
+                <a href="{% url 'clinicians:clients_list' %}" class="search-clear" title="Clear search">✕</a>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary btn-standard search-submit">Search</button>
+        </form>
+    </div>
+
+    <!-- Clients List -->
     {% if clients_data %}
-    <div class="clients-grid">
+    <div class="clients-list-container">
         {% for client_data in clients_data %}
-        <a href="{% url 'clinicians:client_detail' client_data.patient.id %}" class="client-card-link">
-            <div class="dashboard-card client-card {% if client_data.has_recent_activity %}client-card-active{% endif %}">
-                <div class="card-header">
-                    <div class="card-title-group">
-                        <div class="card-icon-emoji">👤</div>
-                        <div style="flex: 1;">
-                            <h2 class="card-title">
-                                {{ client_data.patient.get_full_name|default:client_data.patient.username }}
-                            </h2>
-                            <p class="card-subtitle">{{ client_data.patient.email }}</p>
-                        </div>
-                        {% if client_data.has_recent_activity %}
-                        <span class="badge badge-success" title="Recent activity in last 30 days">Active</span>
-                        {% endif %}
+        <div class="client-list-item" data-client-id="{{ client_data.patient.id }}" data-assessments="{{ client_data.total_assessments }}" onmouseover="highlightClientStats('{{ client_data.patient.id }}', '{{ client_data.total_assessments }}')" onmouseout="resetClientStats()" onclick="toggleClientDetails('client-{{ client_data.patient.id }}'); updateAssessmentDisplay('{{ client_data.total_assessments }}');">
+            <div class="client-list-header-compact">
+                <span class="client-list-name-compact">
+                    {{ client_data.patient.get_full_name|default:client_data.patient.username }}
+                </span>
+                <button type="button" class="client-list-toggle" id="toggle-client-{{ client_data.patient.id }}" onclick="event.stopPropagation(); toggleClientDetails('client-{{ client_data.patient.id }}'); updateAssessmentDisplay('{{ client_data.total_assessments }}');">
+                    <span class="toggle-icon">▼</span>
+                </button>
+            </div>
+            <div class="client-list-card" id="client-{{ client_data.patient.id }}" style="display: none;">
+                <div class="client-card-header">
+                    <div class="client-avatar">
+                        <span>{{ client_data.patient.get_full_name|default:client_data.patient.username|first|upper }}</span>
                     </div>
+                    <div class="client-info">
+                        <h3 class="client-name">
+                            {{ client_data.patient.get_full_name|default:client_data.patient.username }}
+                        </h3>
+                        <p class="client-email">{{ client_data.patient.email }}</p>
+                    </div>
+                    {% if client_data.has_recent_activity %}
+                    <span class="client-status-badge active" title="Recent activity in last 30 days">Active</span>
+                    {% else %}
+                    <span class="client-status-badge inactive">Inactive</span>
+                    {% endif %}
                 </div>
-                <div class="card-content">
+                
+                <div class="client-card-body">
                     <div class="client-stats-grid">
                         <div class="client-stat-item">
-                            <div class="client-stat-value">{{ client_data.total_assessments }}</div>
-                            <div class="client-stat-label">Assessments</div>
+                            <div class="client-stat-icon">📋</div>
+                            <div class="client-stat-content">
+                                <div class="client-stat-value">{{ client_data.total_assessments }}</div>
+                                <div class="client-stat-label">Assessments</div>
+                            </div>
                         </div>
                         <div class="client-stat-item">
-                            <div class="client-stat-value">{{ client_data.medications_count }}</div>
-                            <div class="client-stat-label">Medications</div>
+                            <div class="client-stat-icon">💊</div>
+                            <div class="client-stat-content">
+                                <div class="client-stat-value">{{ client_data.medications_count }}</div>
+                                <div class="client-stat-label">Medications</div>
+                            </div>
                         </div>
                         <div class="client-stat-item">
-                            <div class="client-stat-value">{{ client_data.conditions_count }}</div>
-                            <div class="client-stat-label">Conditions</div>
+                            <div class="client-stat-icon">🏥</div>
+                            <div class="client-stat-content">
+                                <div class="client-stat-value">{{ client_data.conditions_count }}</div>
+                                <div class="client-stat-label">Conditions</div>
+                            </div>
                         </div>
                         <div class="client-stat-item">
-                            <div class="client-stat-value">{{ client_data.allergies_count }}</div>
-                            <div class="client-stat-label">Allergies</div>
-                        </div>
-                    </div>
-                    
-                    {% if client_data.last_visit %}
-                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Last Visit:</span>
-                            <strong>{{ client_data.last_visit|date:"M d, Y" }}</strong>
-                        </div>
-                    </div>
-                    {% else %}
-                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-                        <span style="color: var(--text-secondary); font-size: 0.875rem;">No visits recorded yet</span>
-                    </div>
-                    {% endif %}
-                    
-                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Access Level:</span>
-                            <span class="badge badge-info">{{ client_data.access.get_access_level_display }}</span>
+                            <div class="client-stat-icon">⚠️</div>
+                            <div class="client-stat-content">
+                                <div class="client-stat-value">{{ client_data.allergies_count }}</div>
+                                <div class="client-stat-label">Allergies</div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <div class="client-card-footer">
+                    <div class="client-footer-item">
+                        <span class="client-footer-label">Last Visit:</span>
+                        <span class="client-footer-value">
+                            {% if client_data.last_visit %}
+                                {{ client_data.last_visit|date:"M d, Y" }}
+                            {% else %}
+                                <span style="color: var(--text-secondary);">No visits yet</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="client-footer-item">
+                        <span class="client-footer-label">Access:</span>
+                        <span class="badge badge-info badge-sm">{{ client_data.access.get_access_level_display }}</span>
+                    </div>
+                    <div class="client-footer-item">
+                        <span class="client-footer-label">Added:</span>
+                        <span class="client-footer-value">{{ client_data.access.granted_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+                
+                <div class="client-card-actions">
+                    <a href="{% url 'clinicians:client_detail' client_data.patient.id %}" class="btn btn-primary btn-standard">View Full Details →</a>
+                </div>
             </div>
-        </a>
+        </div>
         {% endfor %}
     </div>
     {% else %}
-    <div class="card">
-        <div class="card-body">
-            <div class="empty-state">
-                {% if search_query %}
-                <p>No clients found matching "{{ search_query }}".</p>
-                <a href="{% url 'clinicians:clients_list' %}" class="btn btn-secondary">View All Clients</a>
-                {% else %}
-                <p>No clients have granted you access yet.</p>
-                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                    Patients can invite you via email or by using your practitioner code to access their health records.
-                </p>
-                {% endif %}
-            </div>
-        </div>
+    <div class="empty-state-card">
+        <div class="empty-state-icon">👥</div>
+        <h3>No Clients Found</h3>
+        {% if search_query %}
+        <p>No clients found matching "{{ search_query }}".</p>
+        <a href="{% url 'clinicians:clients_list' %}" class="btn btn-secondary btn-standard">View All Clients</a>
+        {% else %}
+        <p>No clients have granted you access yet.</p>
+        <p class="empty-state-hint">
+            Patients can invite you via email or by using your practitioner code to access their health records.
+        </p>
+        {% endif %}
     </div>
     {% endif %}
 </div>
 
 <style>
-.clients-grid {
+/* Stats Summary */
+.stats-summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
 }
 
-.client-card-link {
-    text-decoration: none;
-    color: inherit;
-    display: block;
+.stat-card {
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.05) 0%, rgba(32, 178, 170, 0.05) 100%);
+    border: 1px solid rgba(0, 113, 227, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.client-card-link:hover {
-    transform: translateY(-4px);
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.client-card-link:hover .client-card {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+.stat-icon {
+    font-size: 2.5rem;
+    line-height: 1;
 }
 
-.client-card {
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-height: 280px;
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1.2;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.stat-hint {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+/* Search Card */
+.search-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
     padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.client-card-active {
-    border-left: 4px solid var(--success-color);
+.search-form {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.search-input-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.search-clear {
+    position: absolute;
+    right: 1rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 1.25rem;
+    line-height: 1;
+    padding: 0.25rem;
+    transition: color 0.2s ease;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.search-clear:hover {
+    color: var(--text-primary);
+}
+
+.search-submit {
+    flex-shrink: 0;
+}
+
+/* Standardized Button Styles */
+.btn-standard {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 6px;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    border: 1px solid transparent;
+}
+
+.btn-standard:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary.btn-standard {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.btn-primary.btn-standard:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.btn-secondary.btn-standard {
+    background: var(--bg-white);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.btn-secondary.btn-standard:hover {
+    background: var(--bg-light);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Clients List */
+.clients-list-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.client-list-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.client-list-header-compact {
+    padding: 0.875rem 1rem;
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+}
+
+.client-list-header-compact:hover {
+    background: var(--bg-light);
+    border-color: var(--primary-color);
+}
+
+.client-list-name-compact {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.client-list-toggle {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    font-size: 0.875rem;
+    min-height: 36px;
+    min-width: 36px;
+}
+
+.client-list-toggle:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.client-list-toggle:hover .toggle-icon {
+    color: white;
+}
+
+
+.toggle-icon {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+}
+
+.client-list-toggle.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.client-list-card {
+    margin-top: 0.5rem;
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.client-card-header {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.05) 0%, rgba(32, 178, 170, 0.05) 100%);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.client-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--healthcare-primary) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.client-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.client-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
+    word-wrap: break-word;
+}
+
+.client-email {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+    word-wrap: break-word;
+}
+
+.client-status-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.client-status-badge.active {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.client-status-badge.inactive {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+.client-card-body {
+    padding: 1.5rem;
 }
 
 .client-stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
-    margin: 1rem 0;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
 }
 
 .client-stat-item {
-    text-align: center;
-    padding: 0.5rem;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg-light);
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+.client-list-card:hover .client-stat-item {
+    background: rgba(0, 113, 227, 0.05);
+}
+
+.client-stat-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.client-stat-content {
+    flex: 1;
     min-width: 0;
-    overflow: hidden;
 }
 
 .client-stat-value {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--primary-color);
+    line-height: 1.2;
 }
 
 .client-stat-label {
     font-size: 0.75rem;
     color: var(--text-secondary);
-    margin-top: 0.25rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
-
-.card-content {
-    overflow: visible;
+    margin-top: 0.25rem;
     word-wrap: break-word;
 }
 
-.card-title {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+.client-card-footer {
+    padding: 1rem 1.5rem;
+    background: var(--bg-light);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
-.card-subtitle {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+.client-footer-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
 }
 
-.search-form {
-    width: 100%;
+.client-footer-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.client-footer-value {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    word-wrap: break-word;
+}
+
+.client-card-actions {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.badge-sm {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Empty State */
+.empty-state-card {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--bg-white);
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.empty-state-card p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.empty-state-hint {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .clients-list-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
-    .clients-grid {
+    .search-form {
+        flex-direction: column;
+    }
+    
+    .search-input-wrapper {
+        width: 100%;
+    }
+    
+    .search-submit {
+        width: 100%;
+    }
+    
+    .clients-list-container {
         grid-template-columns: 1fr;
     }
     
     .client-stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+    
+    .client-card-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .client-footer-item {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .client-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .client-card-header {
+        padding: 1rem;
+    }
+    
+    .client-card-body {
+        padding: 1rem;
+    }
+    
+    .client-card-footer {
+        padding: 1rem;
+    }
+    
+    .client-card-actions {
+        padding: 1rem;
+    }
 }
 </style>
+
+<script>
+let currentHighlightedAssessments = null;
+
+function toggleClientDetails(clientId) {
+    const cardDiv = document.getElementById(clientId);
+    const toggleBtn = document.getElementById('toggle-' + clientId);
+    const toggleIcon = toggleBtn.querySelector('.toggle-icon');
+    
+    if (cardDiv.style.display === 'none') {
+        cardDiv.style.display = 'block';
+        toggleIcon.textContent = '▲';
+        toggleBtn.classList.add('active');
+    } else {
+        cardDiv.style.display = 'none';
+        toggleIcon.textContent = '▼';
+        toggleBtn.classList.remove('active');
+    }
+}
+
+function highlightClientStats(clientId, assessments) {
+    const totalValue = document.getElementById('total-assessments-value');
+    if (totalValue && assessments !== undefined && assessments !== '') {
+        currentHighlightedAssessments = assessments;
+        totalValue.textContent = assessments;
+        totalValue.style.color = 'var(--primary-color)';
+        totalValue.style.fontWeight = '700';
+    }
+}
+
+function resetClientStats() {
+    const totalValue = document.getElementById('total-assessments-value');
+    if (totalValue) {
+        totalValue.textContent = '{{ total_assessments|default:0 }}';
+        totalValue.style.color = '';
+        totalValue.style.fontWeight = '';
+        currentHighlightedAssessments = null;
+    }
+}
+
+function updateAssessmentDisplay(assessments) {
+    const totalValue = document.getElementById('total-assessments-value');
+    if (totalValue && assessments !== undefined && assessments !== '') {
+        currentHighlightedAssessments = assessments;
+        totalValue.textContent = assessments;
+        totalValue.style.color = 'var(--primary-color)';
+        totalValue.style.fontWeight = '700';
+    }
+}
+
+
+// Close all client cards on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const openCards = document.querySelectorAll('.client-list-card[style*="display: block"]');
+        openCards.forEach(function(card) {
+            const clientId = card.id;
+            toggleClientDetails(clientId);
+        });
+        resetClientStats();
+        currentHighlightedAssessments = null;
+    }
+});
+
+// Reset stats when clicking outside or when mouse leaves client card
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.client-list-item') && !e.target.closest('#total-assessments-stat')) {
+        resetClientStats();
+    }
+});
+
+// Also reset when mouse leaves any client card
+document.addEventListener('mouseout', function(e) {
+    if (e.target.closest('.client-list-item')) {
+        // Small delay to allow for hover transitions
+        setTimeout(function() {
+            if (!document.querySelector('.client-list-item:hover')) {
+                resetClientStats();
+            }
+        }, 100);
+    }
+});
+</script>
 {% endblock %}
+
+
+
+
 

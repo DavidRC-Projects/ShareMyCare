@@ -9,7 +9,46 @@
         <h1 class="dashboard-title">Your Health Dashboard</h1>
         <p class="dashboard-subtitle">Welcome back, {{ user.get_full_name|default:user.username }}!</p>
         <div class="dashboard-header-actions">
+            <a href="{% url 'health_records:passport' %}" class="btn btn-secondary btn-header">📱 Health Passport</a>
+            <a href="{% url 'health_records:emergency_card' %}" class="btn btn-secondary btn-header">🚨 Emergency Card</a>
             <a href="{% url 'health_records:invite_clinician' %}" class="btn btn-primary btn-header">Share with Clinicians</a>
+        </div>
+    </div>
+
+    <!-- Profile Completion Progress -->
+    <div class="profile-progress-card">
+        <h3>Profile Completion</h3>
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ profile_completion.percent }}%"></div>
+            </div>
+            <p class="progress-text">{{ profile_completion.completed }} of {{ profile_completion.total }} sections completed</p>
+        </div>
+        <div class="progress-checklist">
+            <div class="checklist-item {% if profile.date_of_birth %}completed{% endif %}">
+                <span class="check-icon">{% if profile.date_of_birth %}✓{% else %}○{% endif %}</span>
+                <span>Date of Birth</span>
+            </div>
+            <div class="checklist-item {% if profile.phone_number %}completed{% endif %}">
+                <span class="check-icon">{% if profile.phone_number %}✓{% else %}○{% endif %}</span>
+                <span>Phone Number</span>
+            </div>
+            <div class="checklist-item {% if profile.emergency_contact_name %}completed{% endif %}">
+                <span class="check-icon">{% if profile.emergency_contact_name %}✓{% else %}○{% endif %}</span>
+                <span>Emergency Contact</span>
+            </div>
+            <div class="checklist-item {% if medications.count > 0 %}completed{% endif %}">
+                <span class="check-icon">{% if medications.count > 0 %}✓{% else %}○{% endif %}</span>
+                <span>Medications</span>
+            </div>
+            <div class="checklist-item {% if conditions.count > 0 %}completed{% endif %}">
+                <span class="check-icon">{% if conditions.count > 0 %}✓{% else %}○{% endif %}</span>
+                <span>Conditions</span>
+            </div>
+            <div class="checklist-item {% if allergies.count > 0 %}completed{% endif %}">
+                <span class="check-icon">{% if allergies.count > 0 %}✓{% else %}○{% endif %}</span>
+                <span>Allergies</span>
+            </div>
         </div>
     </div>
 

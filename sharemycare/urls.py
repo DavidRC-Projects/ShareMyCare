@@ -20,6 +20,7 @@ from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
 from accounts import views as accounts_views
+from sharemycare import views as sharemycare_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,6 +32,14 @@ urlpatterns = [
     path('accounts/register/', accounts_views.register, name='register'),
     # Allauth URLs (for additional features, but custom login/logout/register take precedence)
     path("accounts/", include("allauth.urls")),
+    # Static pages
+    path('security/', sharemycare_views.security, name='security'),
+    path('support/', sharemycare_views.support, name='support'),
+    path('help-center/', sharemycare_views.help_center, name='help_center'),
+    path('contact/', sharemycare_views.contact, name='contact'),
+    path('legal/', sharemycare_views.legal, name='legal'),
+    path('privacy/', sharemycare_views.privacy, name='privacy'),
+    path('terms/', sharemycare_views.terms, name='terms'),
 ]
 
 # Serve static and media files in development

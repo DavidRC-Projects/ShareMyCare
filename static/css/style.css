@@ -3536,6 +3536,186 @@ a.btn-primary[href*="dashboard"]:active {
     }
 }
 
+/* Mobile Bottom Navigation */
+.mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-white);
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    padding: 0.5rem 0;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+.mobile-bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    text-decoration: none;
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
+    flex: 1;
+    min-width: 0;
+    position: relative;
+}
+
+.nav-item.active {
+    color: var(--primary-color);
+}
+
+.nav-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.nav-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.nav-fab {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--healthcare-primary) 100%);
+    color: white !important;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    margin: -1rem 0.5rem 0;
+    box-shadow: 0 4px 12px rgba(0, 113, 227, 0.4);
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    z-index: 1001;
+}
+
+.nav-fab:hover,
+.nav-fab:active {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 113, 227, 0.5);
+}
+
+.nav-fab .nav-icon {
+    font-size: 1.75rem;
+    margin: 0;
+}
+
+.nav-fab .nav-label {
+    display: none;
+}
+
+/* FAB Menu */
+.fab-menu {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1002;
+}
+
+.fab-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease;
+}
+
+.fab-menu-content {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--bg-white);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    min-width: 200px;
+    animation: slideUp 0.3s ease;
+}
+
+.fab-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    border-radius: 12px;
+    transition: background 0.2s ease;
+}
+
+.fab-menu-item:hover {
+    background: var(--bg-light);
+}
+
+.fab-icon {
+    font-size: 1.5rem;
+    width: 2rem;
+    text-align: center;
+}
+
+.fab-label {
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Hide bottom nav on desktop */
+@media (min-width: 769px) {
+    .mobile-bottom-nav {
+        display: none;
+    }
+}
+
+/* Add padding to main content on mobile to account for bottom nav */
+@media (max-width: 768px) {
+    main {
+        padding-bottom: 80px;
+    }
+    
+    .footer {
+        margin-bottom: 80px;
+    }
+}
+
 /* Card Title Group - Mobile Responsive */
 @media (max-width: 768px) {
     .card-title-group {
@@ -3561,6 +3741,93 @@ a.btn-primary[href*="dashboard"]:active {
     .card-header > div:last-child[style*="display: flex"] a {
         width: 100%;
         margin: 0.25rem 0;
+    }
+}
+
+/* Profile Progress Card */
+.profile-progress-card {
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.05) 0%, rgba(32, 178, 170, 0.05) 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
+}
+
+.profile-progress-card h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+.progress-container {
+    margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 12px;
+    background: var(--bg-light);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--healthcare-primary) 100%);
+    transition: width 0.5s ease;
+    border-radius: 6px;
+}
+
+.progress-text {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+    font-weight: 500;
+}
+
+.progress-checklist {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg-white);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.checklist-item.completed {
+    background: #e8f5e9;
+    border-color: #4caf50;
+}
+
+.check-icon {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    width: 1.5rem;
+    text-align: center;
+}
+
+.checklist-item.completed .check-icon {
+    color: #4caf50;
+}
+
+@media (max-width: 768px) {
+    .profile-progress-card {
+        padding: 1.5rem;
+    }
+    
+    .progress-checklist {
+        grid-template-columns: 1fr;
     }
 }
 

@@ -8,6 +8,8 @@ from django.db import models
 from django.core.mail import send_mail
 from django.conf import settings
 from django.http import JsonResponse
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 import json
 from .models import Clinician, ClinicianInvitation, PatientClinicianAccess, ObjectiveMeasures
 from .forms import ClinicianForm, ClinicianInvitationForm, ObjectiveMeasuresForm
@@ -223,6 +225,15 @@ def send_practitioner_code_email(request):
             messages.error(request, 'Please provide a client email address.')
             return redirect('clinicians:dashboard')
         
+        # Validate email format
+        try:
+            validate_email(client_email)
+        except ValidationError:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': 'Please enter a valid email address.'}, status=400)
+            messages.error(request, 'Please enter a valid email address.')
+            return redirect('clinicians:dashboard')
+        
         if not clinician.practitioner_code:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'error', 'message': 'Practitioner code not available.'}, status=400)
@@ -349,18 +360,20 @@ def clients_list(request):
             'recent_assessment': recent_assessment,
         })
     
-    # Sort by last visit (most recent first) or by name if no visits
-    from datetime import date
-    clients_data.sort(key=lambda x: (
-        x['last_visit'] if x['last_visit'] else date.min,
-        (x['patient'].get_full_name() or x['patient'].username).lower()
-    ), reverse=True)
+    # Sort by access granted date (newest first)
+    clients_data.sort(key=lambda x: x['access'].granted_at, reverse=True)
+    
+    # Calculate total assessments across all clients
+    total_assessments = sum(client['total_assessments'] for client in clients_data)
+    active_clients_count = sum(1 for client in clients_data if client['has_recent_activity'])
     
     context = {
         'clinician': clinician,
         'clients_data': clients_data,
         'search_query': search_query,
         'total_clients': len(clients_data),
+        'total_assessments': total_assessments,
+        'active_clients_count': active_clients_count,
     }
     return render(request, 'clinicians/clients_list.html', context)
 

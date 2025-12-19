@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Terms of Service - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">Terms of Service</h1>
+        <p class="page-subtitle">Last updated: {{ "now"|date:"F d, Y" }}</p>
+    </div>
+
+    <div class="page-content">
+        <section class="content-section">
+            <h2>Agreement to Terms</h2>
+            <p>By accessing or using ShareMyCare, you agree to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access the service.</p>
+        </section>
+
+        <section class="content-section">
+            <h2>Use of the Service</h2>
+            <h3>Eligibility</h3>
+            <p>You must be at least 18 years old to use ShareMyCare. By using the service, you represent that you are of legal age.</p>
+
+            <h3>Account Responsibility</h3>
+            <p>You are responsible for:</p>
+            <ul>
+                <li>Maintaining the confidentiality of your account credentials</li>
+                <li>All activities that occur under your account</li>
+                <li>Ensuring the accuracy of information you provide</li>
+                <li>Notifying us immediately of any unauthorized access</li>
+            </ul>
+        </section>
+
+        <section class="content-section">
+            <h2>Health Information</h2>
+            <p>ShareMyCare is a platform for storing and sharing health information. Important points:</p>
+            <ul>
+                <li>You are responsible for the accuracy of health information you enter</li>
+                <li>This platform is not a substitute for professional medical advice</li>
+                <li>Always consult qualified healthcare professionals for medical decisions</li>
+                <li>We are not liable for medical decisions made based on information in the platform</li>
+            </ul>
+        </section>
+
+        <section class="content-section">
+            <h2>Sharing and Access Control</h2>
+            <p>You control who has access to your health information:</p>
+            <ul>
+                <li>You grant access to clinicians at your discretion</li>
+                <li>You can revoke access at any time</li>
+                <li>You are responsible for managing access permissions</li>
+                <li>Clinicians must respect your privacy and use information only for legitimate healthcare purposes</li>
+            </ul>
+        </section>
+
+        <section class="content-section">
+            <h2>Prohibited Uses</h2>
+            <p>You agree not to:</p>
+            <ul>
+                <li>Use the service for any illegal purpose</li>
+                <li>Attempt to gain unauthorized access to other users' accounts</li>
+                <li>Interfere with or disrupt the service</li>
+                <li>Upload malicious code or viruses</li>
+                <li>Impersonate any person or entity</li>
+            </ul>
+        </section>
+
+        <section class="content-section">
+            <h2>Intellectual Property</h2>
+            <p>The ShareMyCare platform, including its design, features, and content, is owned by ShareMyCare and protected by intellectual property laws. You may not copy, modify, or distribute any part of the platform without permission.</p>
+        </section>
+
+        <section class="content-section">
+            <h2>Limitation of Liability</h2>
+            <p>ShareMyCare is provided "as is" without warranties of any kind. We are not liable for any indirect, incidental, or consequential damages arising from your use of the service.</p>
+        </section>
+
+        <section class="content-section">
+            <h2>Changes to Terms</h2>
+            <p>We reserve the right to modify these terms at any time. Continued use of the service after changes constitutes acceptance of the new terms.</p>
+        </section>
+
+        <section class="content-section">
+            <h2>Contact</h2>
+            <p>If you have questions about these Terms of Service, please <a href="{% url 'contact' %}">contact us</a>.</p>
+        </section>
+    </div>
+</div>
+
+<style>
+.page-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.page-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+}
+
+.page-content {
+    line-height: 1.8;
+}
+
+.content-section {
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: var(--bg-white);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.content-section h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.content-section h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.content-section p {
+    font-size: 1.0625rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.content-section ul {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 1rem;
+}
+
+.content-section ul li {
+    padding: 0.75rem 0;
+    padding-left: 2rem;
+    position: relative;
+    color: var(--text-primary);
+}
+
+.content-section ul li:before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+.content-section a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .content-section {
+        padding: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+

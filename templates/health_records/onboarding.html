@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Welcome to ShareMyCare - Onboarding{% endblock %}
+
+{% block content %}
+<div class="onboarding-container">
+    <div class="onboarding-progress">
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ progress }}%"></div>
+        </div>
+        <p class="progress-text">Step {{ current_step_index|add:1 }} of {{ total_steps }}</p>
+    </div>
+
+    <div class="onboarding-content">
+        {% if current_step == 'welcome' %}
+            <div class="onboarding-step">
+                <div class="step-icon">👋</div>
+                <h1 class="step-title">Welcome to ShareMyCare!</h1>
+                <p class="step-description">
+                    Your digital health passport. Let's get you set up in just a few steps.
+                </p>
+                <div class="step-features">
+                    <div class="feature-item">
+                        <span class="feature-icon">🔒</span>
+                        <span>Secure & Private</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">👨‍⚕️</span>
+                        <span>Share with Clinicians</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📱</span>
+                        <span>Access Anywhere</span>
+                    </div>
+                </div>
+                <a href="?step=profile" class="btn btn-primary btn-large">Get Started</a>
+            </div>
+
+        {% elif current_step == 'profile' %}
+            <div class="onboarding-step">
+                <div class="step-icon">👤</div>
+                <h1 class="step-title">Complete Your Profile</h1>
+                <p class="step-description">
+                    Add your basic information to get started. You can always update this later.
+                </p>
+                <div class="step-action">
+                    <a href="{% url 'health_records:edit_profile' %}?next=medications" class="btn btn-primary btn-large">
+                        Complete Profile
+                    </a>
+                    <p class="step-hint">You can skip this and do it later</p>
+                    <a href="?step=medications" class="btn btn-secondary">Skip for Now</a>
+                </div>
+            </div>
+
+        {% elif current_step == 'medications' %}
+            <div class="onboarding-step">
+                <div class="step-icon">💊</div>
+                <h1 class="step-title">Add Your Medications</h1>
+                <p class="step-description">
+                    Record all medications you're currently taking. This helps clinicians provide better care.
+                </p>
+                <div class="step-action">
+                    <a href="{% url 'health_records:add_medication' %}?next=conditions" class="btn btn-primary btn-large">
+                        Add Medication
+                    </a>
+                    <p class="step-hint">You can add more later</p>
+                    <a href="?step=conditions" class="btn btn-secondary">Skip for Now</a>
+                </div>
+            </div>
+
+        {% elif current_step == 'conditions' %}
+            <div class="onboarding-step">
+                <div class="step-icon">🏥</div>
+                <h1 class="step-title">Add Medical Conditions</h1>
+                <p class="step-description">
+                    Record any medical conditions or diagnoses you have.
+                </p>
+                <div class="step-action">
+                    <a href="{% url 'health_records:add_condition' %}?next=allergies" class="btn btn-primary btn-large">
+                        Add Condition
+                    </a>
+                    <p class="step-hint">You can add more later</p>
+                    <a href="?step=allergies" class="btn btn-secondary">Skip for Now</a>
+                </div>
+            </div>
+
+        {% elif current_step == 'allergies' %}
+            <div class="onboarding-step">
+                <div class="step-icon">⚠️</div>
+                <h1 class="step-title">Add Allergies</h1>
+                <p class="step-description">
+                    Record any allergies you have. This is critical information for emergency situations.
+                </p>
+                <div class="step-action">
+                    <a href="{% url 'health_records:add_allergy' %}?next=complete" class="btn btn-primary btn-large">
+                        Add Allergy
+                    </a>
+                    <p class="step-hint">You can add more later</p>
+                    <a href="?step=complete" class="btn btn-secondary">Skip for Now</a>
+                </div>
+            </div>
+
+        {% elif current_step == 'complete' %}
+            <div class="onboarding-step">
+                <div class="step-icon">🎉</div>
+                <h1 class="step-title">You're All Set!</h1>
+                <p class="step-description">
+                    Your ShareMyCare profile is ready. You can always add more information later.
+                </p>
+                <div class="step-features">
+                    <div class="feature-item">
+                        <span class="feature-icon">✅</span>
+                        <span>Profile Created</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📋</span>
+                        <span>Add More Records Anytime</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">👨‍⚕️</span>
+                        <span>Share with Clinicians</span>
+                    </div>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-large">Go to Dashboard</button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.onboarding-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.onboarding-progress {
+    margin-bottom: 3rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-light);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--healthcare-primary) 100%);
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.onboarding-content {
+    background: var(--bg-white);
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.onboarding-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.step-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+}
+
+.step-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.step-description {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.step-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 2rem 0;
+    width: 100%;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--bg-light);
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.feature-icon {
+    font-size: 1.5rem;
+}
+
+.step-action {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+.step-hint {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin: 0.5rem 0;
+}
+
+.btn-large {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+}
+
+@media (max-width: 768px) {
+    .onboarding-content {
+        padding: 2rem 1.5rem;
+    }
+    
+    .step-title {
+        font-size: 1.75rem;
+    }
+}
+</style>
+{% endblock %}
+

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+from .validators import validate_image_file
 
 
 class Condition(models.Model):
@@ -46,6 +47,7 @@ class Medication(models.Model):
         upload_to='prescriptions/%Y/%m/%d/',
         blank=True,
         null=True,
+        validators=[validate_image_file],
         help_text="Photo of prescription if available"
     )
     notes = models.TextField(blank=True)
@@ -160,6 +162,7 @@ class Assessment(models.Model):
         upload_to='practitioner_notes/%Y/%m/%d/',
         blank=True,
         null=True,
+        validators=[validate_image_file],
         help_text="Photo of practitioner's notes if available"
     )
     completed_at = models.DateTimeField(
