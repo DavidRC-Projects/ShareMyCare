@@ -287,10 +287,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Login Security
-LOGIN_REDIRECT_URL = '/'
-LOGIN_URL = '/accounts/login/'
-LOGOUT_REDIRECT_URL = '/'
+# Login Security (already defined above, removing duplicates)
+# LOGIN_REDIRECT_URL = '/'  # Already set above
+# LOGIN_URL = '/accounts/login/'  # Already set above as 'login'
+# LOGOUT_REDIRECT_URL = '/'  # Already set above
 
 # Admin Security
 ADMIN_URL = os.environ.get('ADMIN_URL', 'admin/')  # Change default admin URL
