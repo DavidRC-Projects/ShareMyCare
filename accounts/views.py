@@ -12,14 +12,13 @@ class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
     
     def form_valid(self, form):
-        """Override to ensure user has a profile"""
-        # Authenticate and login the user
-        username = form.cleaned_data.get('username')
-        password = form.cleaned_data.get('password')
-        user = authenticate(self.request, username=username, password=password)
+        """Override to ensure user has a profile and handle redirect"""
+        # Call parent to authenticate and login
+        response = super().form_valid(form)
         
-        if user is not None:
-            # Ensure user has a profile
+        # Ensure user has a profile
+        user = self.request.user
+        if user.is_authenticated:
             if not hasattr(user, 'profile'):
                 try:
                     UserProfile.objects.get_or_create(user=user)
@@ -27,15 +26,13 @@ class CustomLoginView(LoginView):
                     # If profile creation fails, log but continue
                     pass
             
-            login(self.request, user)
-            
             # Determine redirect based on user type
             if hasattr(user, 'clinician_profile'):
                 return redirect('clinicians:dashboard')
             else:
                 return redirect('health_records:dashboard')
         
-        return super().form_valid(form)
+        return response
 
 
 def register(request):
