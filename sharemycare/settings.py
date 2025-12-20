@@ -183,7 +183,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 SITE_ID = 1
 
 # Login/Logout URLs
-LOGIN_URL = 'login'
+LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
@@ -287,10 +287,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Login Security (already defined above, removing duplicates)
-# LOGIN_REDIRECT_URL = '/'  # Already set above
-# LOGIN_URL = '/accounts/login/'  # Already set above as 'login'
-# LOGOUT_REDIRECT_URL = '/'  # Already set above
+# Login Security (settings defined above)
 
 # Admin Security
 ADMIN_URL = os.environ.get('ADMIN_URL', 'admin/')  # Change default admin URL
