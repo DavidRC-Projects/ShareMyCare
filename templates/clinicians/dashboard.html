@@ -6,65 +6,71 @@
 {% block content %}
 <div class="dashboard-container">
     <div class="dashboard-header">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-            <div>
+        <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="text-align: center;">
                 <h1 class="dashboard-title">Practitioner Dashboard</h1>
                 <p class="dashboard-subtitle">Welcome, {{ clinician.full_name }}!</p>
             </div>
-            <div class="dashboard-header-actions">
-                <a href="{% url 'clinicians:clients_list' %}" class="btn btn-primary">👥 View All Clients</a>
-            </div>
         </div>
     </div>
 
-    <div class="practitioner-info-card">
-        <div class="practitioner-info-header">
-            <h2>Your Information</h2>
-            <div class="practitioner-info-actions">
-                <a href="{% url 'clinicians:edit_profile' %}" class="btn btn-primary btn-sm">Edit</a>
-                <a href="{% url 'clinicians:delete_profile' %}" class="btn btn-danger btn-sm">Delete</a>
-            </div>
-        </div>
-        <div class="info-grid">
-            <div class="info-item">
-                <strong>Title:</strong> {{ clinician.get_title_display }}
-            </div>
-            <div class="info-item">
-                <strong>Speciality:</strong> {{ clinician.speciality|default:"Not specified" }}
-            </div>
-            <div class="info-item">
-                <strong>Organisation:</strong> {{ clinician.organisation|default:"Not specified" }}
-            </div>
-            <div class="info-item">
-                <strong>Registration Number:</strong> {{ clinician.registration_number|default:"Not specified" }}
-            </div>
-            <div class="info-item" style="grid-column: 1 / -1; padding: var(--spacing-md); background: linear-gradient(135deg, rgba(0, 113, 227, 0.1) 0%, rgba(32, 178, 170, 0.1) 100%); border-radius: var(--radius-md); border: 2px solid rgba(0, 113, 227, 0.2);">
-                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--spacing-sm);">
-                    <div>
-                        <strong style="display: block; margin-bottom: 0.25rem; color: var(--text-primary);">Your Practitioner Code:</strong>
-                        <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0;">
-                            Share this code with patients so they can connect with you instantly
-                        </p>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 2rem; font-weight: 700; letter-spacing: 0.5rem; color: var(--primary-color); font-family: 'Courier New', monospace; padding: var(--spacing-sm) var(--spacing-md); background: white; border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            {{ clinician.practitioner_code|default:"Generating..." }}
-                        </div>
-                        <div style="margin-top: var(--spacing-sm);">
-                            <button type="button" class="btn btn-primary btn-sm" onclick="openEmailModal()" style="width: 100%;">
-                                📧 Send Code by Email
-                            </button>
-                        </div>
-                    </div>
+    <!-- Compact Practitioner Info Section -->
+    <div class="practitioner-info-compact">
+        <div class="practitioner-info-compact-content">
+            <div class="practitioner-info-compact-left">
+                <div class="practitioner-info-compact-item">
+                    <span class="info-label">Title:</span>
+                    <span class="info-value">{{ clinician.get_title_display }}</span>
+                </div>
+                <div class="practitioner-info-compact-item">
+                    <span class="info-label">Speciality:</span>
+                    <span class="info-value">{{ clinician.speciality|default:"Not specified" }}</span>
+                </div>
+                <div class="practitioner-info-compact-item">
+                    <span class="info-label">Organisation:</span>
+                    <span class="info-value">{{ clinician.organisation|default:"Not specified" }}</span>
                 </div>
             </div>
+            <div class="practitioner-info-compact-right">
+                <a href="{% url 'clinicians:edit_profile' %}" class="btn btn-primary btn-sm">Edit</a>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="openEmailModal()">Send Code</button>
+            </div>
+        </div>
+        <!-- Practitioner Code Box -->
+        <div class="practitioner-code-box">
+            <div class="practitioner-code-header">
+                <span class="practitioner-code-label">Practitioner Code:</span>
+                <span class="info-icon-wrapper">
+                    <span class="info-icon" onmouseenter="showTooltip(event)" onmouseleave="hideTooltip(event)">ℹ️</span>
+                    <div class="tooltip" id="practitionerCodeTooltip">
+                        Share this code with patients so they can quickly find and grant you access to their health records.
+                    </div>
+                </span>
+            </div>
+            <div class="practitioner-code-display">
+                <div class="practitioner-code-value">{{ clinician.practitioner_code|default:"Generating..." }}</div>
+            </div>
         </div>
     </div>
 
-    <div class="dashboard-grid">
+    <!-- Search Bar -->
+    <div class="search-card" style="margin-bottom: 1.5rem;">
+        <div class="search-input-wrapper">
+            <input 
+                type="text" 
+                id="clientSearchInput"
+                placeholder="Search clients by name..." 
+                class="search-input"
+                onkeyup="filterClients()"
+            >
+            <span class="search-icon">🔍</span>
+        </div>
+    </div>
+
+    <div class="dashboard-grid" id="clientsGrid">
         {% if patients_with_assessments %}
             {% for patient_data in patients_with_assessments %}
-                <div class="dashboard-card">
+                <div class="dashboard-card client-card" data-client-name="{{ patient_data.patient.get_full_name|default:patient_data.patient.username|lower }}">
                     <div class="card-header">
                         <div class="card-title-group">
                             <div class="card-icon-emoji">👤</div>
@@ -73,15 +79,15 @@
                                 <p class="card-count">{{ patient_data.assessments.count }} assessment{{ patient_data.assessments.count|pluralize }}</p>
                             </div>
                         </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('patient-{{ patient_data.patient.id }}')" id="toggle-btn-patient-{{ patient_data.patient.id }}">
+                                <span id="toggle-icon-patient-{{ patient_data.patient.id }}">▼</span> Show
+                            </button>
+                        </div>
                     </div>
-                    <div class="card-content">
+                    <div class="card-content" id="card-content-patient-{{ patient_data.patient.id }}" style="display: none;">
                         {% if patient_data.assessments %}
-                            <div style="margin-bottom: 1rem;">
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAssessments({{ patient_data.patient.id }})" id="toggle-btn-{{ patient_data.patient.id }}">
-                                    <span id="toggle-icon-{{ patient_data.patient.id }}">▼</span> <span id="toggle-text-{{ patient_data.patient.id }}">Show Assessments ({{ patient_data.assessments.count }})</span>
-                                </button>
-                            </div>
-                            <div class="items-list" id="assessments-{{ patient_data.patient.id }}" style="display: none;">
+                            <div class="items-list" id="assessments-{{ patient_data.patient.id }}">
                                 {% for assessment in patient_data.assessments %}
                                     <div class="item-row">
                                         <div class="item-info">
@@ -158,7 +164,7 @@
         {% elif patient_accesses %}
             {# Fallback: Show patients from patient_accesses if patients_with_assessments is empty #}
             {% for access in patient_accesses %}
-                <div class="dashboard-card">
+                <div class="dashboard-card client-card" data-client-name="{{ access.patient.get_full_name|default:access.patient.username|lower }}">
                     <div class="card-header">
                         <div class="card-title-group">
                             <div class="card-icon-emoji">👤</div>
@@ -167,8 +173,13 @@
                                 <p class="card-count">0 assessments</p>
                             </div>
                         </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('patient-{{ access.patient.id }}')" id="toggle-btn-patient-{{ access.patient.id }}">
+                                <span id="toggle-icon-patient-{{ access.patient.id }}">▼</span> Show
+                            </button>
+                        </div>
                     </div>
-                    <div class="card-content">
+                    <div class="card-content" id="card-content-patient-{{ access.patient.id }}" style="display: none;">
                         <div class="empty-state">
                             <p>No assessments yet for this patient.</p>
                         </div>
@@ -244,6 +255,188 @@
 </div>
 
 <style>
+.practitioner-info-compact {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.practitioner-info-compact-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.practitioner-info-compact-left {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.practitioner-info-compact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.practitioner-info-compact-item .info-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.practitioner-info-compact-item .info-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.practitioner-info-compact-right {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.practitioner-code-box {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.1) 0%, rgba(32, 178, 170, 0.1) 100%);
+    border-radius: 8px;
+    border: 2px solid rgba(0, 113, 227, 0.2);
+}
+
+.practitioner-code-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.practitioner-code-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.info-icon-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.info-icon {
+    font-size: 0.875rem;
+    cursor: help;
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+}
+
+.info-icon:hover {
+    color: var(--primary-color);
+}
+
+.tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 8px;
+    padding: 0.5rem 0.875rem;
+    background: var(--text-primary);
+    color: white;
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    border-radius: 6px;
+    max-width: 400px;
+    width: max-content;
+    white-space: normal;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    pointer-events: none;
+}
+
+.tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--text-primary);
+}
+
+.tooltip.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.practitioner-code-display {
+    text-align: center;
+}
+
+.practitioner-code-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5rem;
+    color: var(--primary-color);
+    font-family: 'Courier New', monospace;
+    padding: 0.75rem 1.25rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: inline-block;
+}
+
+.search-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input-wrapper .search-input {
+    width: 100%;
+    padding: 0.625rem 2.5rem 0.625rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.9375rem;
+    transition: border-color 0.2s ease;
+}
+
+.search-input-wrapper .search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+}
+
+.search-icon {
+    position: absolute;
+    right: 0.75rem;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    pointer-events: none;
+}
+
 .modal {
     position: fixed;
     top: 0;
@@ -336,23 +529,40 @@
     justify-content: flex-end;
     gap: var(--spacing-sm);
 }
+
+
+@media (max-width: 768px) {
+    .practitioner-info-compact-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .practitioner-info-compact-left {
+        width: 100%;
+    }
+    
+    .practitioner-info-compact-right {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
 </style>
 
 <script>
-function toggleAssessments(patientId) {
-    const assessmentsDiv = document.getElementById('assessments-' + patientId);
-    const toggleIcon = document.getElementById('toggle-icon-' + patientId);
-    const toggleText = document.getElementById('toggle-text-' + patientId);
-    const assessmentCount = toggleText.textContent.match(/\d+/)[0];
+
+function toggleCard(cardId) {
+    const cardContent = document.getElementById('card-content-' + cardId);
+    const toggleIcon = document.getElementById('toggle-icon-' + cardId);
+    const toggleBtn = document.getElementById('toggle-btn-' + cardId);
     
-    if (assessmentsDiv.style.display === 'none') {
-        assessmentsDiv.style.display = 'block';
+    if (cardContent.style.display === 'none') {
+        cardContent.style.display = 'block';
         toggleIcon.textContent = '▲';
-        toggleText.textContent = 'Hide Assessments (' + assessmentCount + ')';
+        toggleBtn.innerHTML = '<span id="toggle-icon-' + cardId + '">▲</span> Hide';
     } else {
-        assessmentsDiv.style.display = 'none';
+        cardContent.style.display = 'none';
         toggleIcon.textContent = '▼';
-        toggleText.textContent = 'Show Assessments (' + assessmentCount + ')';
+        toggleBtn.innerHTML = '<span id="toggle-icon-' + cardId + '">▼</span> Show';
     }
 }
 
@@ -440,6 +650,37 @@ document.addEventListener('keydown', function(e) {
         closeEmailModal();
     }
 });
+
+// Search functionality
+function filterClients() {
+    const searchInput = document.getElementById('clientSearchInput');
+    const searchTerm = searchInput.value.toLowerCase();
+    const clientCards = document.querySelectorAll('.client-card');
+    
+    clientCards.forEach(function(card) {
+        const clientName = card.getAttribute('data-client-name') || '';
+        if (clientName.includes(searchTerm)) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// Tooltip functions
+function showTooltip(event) {
+    const tooltip = event.target.nextElementSibling;
+    if (tooltip && tooltip.classList.contains('tooltip')) {
+        tooltip.classList.add('show');
+    }
+}
+
+function hideTooltip(event) {
+    const tooltip = event.target.nextElementSibling;
+    if (tooltip && tooltip.classList.contains('tooltip')) {
+        tooltip.classList.remove('show');
+    }
+}
 </script>
 {% endblock %}
 

@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
 from django.conf import settings
@@ -23,11 +24,26 @@ def home(request):
 @login_required
 def onboarding(request):
     """Onboarding wizard for new users"""
-    profile = request.user.profile
+    user = request.user
+    profile = user.profile
     step = request.GET.get('step', 'welcome')
     
-    # Check if already completed
-    if profile.onboarding_completed and step == 'welcome':
+    # Check if user has any data - if so, skip onboarding
+    has_data = (
+        profile.date_of_birth or
+        profile.phone_number or
+        profile.emergency_contact_name or
+        user.medications.exists() or
+        user.conditions.exists() or
+        user.allergies.exists()
+    )
+    
+    # If user has data or onboarding is marked complete, go to dashboard
+    if (profile.onboarding_completed or has_data) and step == 'welcome':
+        if not profile.onboarding_completed and has_data:
+            # Mark as completed if they have data
+            profile.onboarding_completed = True
+            profile.save()
         return redirect('health_records:dashboard')
     
     steps = ['welcome', 'profile', 'medications', 'conditions', 'allergies', 'complete']
@@ -51,20 +67,175 @@ def onboarding(request):
 
 
 @login_required
-def passport_view(request):
+def passport_view(request, patient_id=None):
     """Passport-style card view of health records"""
-    user = request.user
+    # Check if this is a clinician viewing a patient's passport
+    if patient_id:
+        from clinicians.models import PatientClinicianAccess
+        patient = get_object_or_404(User, pk=patient_id)
+        
+        # Verify clinician has access
+        if hasattr(request.user, 'clinician_profile'):
+            clinician = request.user.clinician_profile
+            access = PatientClinicianAccess.objects.filter(
+                patient=patient,
+                clinician=clinician,
+                is_active=True
+            ).first()
+            
+            if not access:
+                messages.error(request, 'You do not have access to this patient\'s records.')
+                return redirect('clinicians:dashboard')
+            
+            # Use patient's data
+            user = patient
+            is_clinician_view = True
+        else:
+            messages.error(request, 'Access denied.')
+            return redirect('health_records:dashboard')
+    else:
+        # User viewing their own passport
+        user = request.user
+        is_clinician_view = False
+    
+    # Get profile
+    try:
+        profile = user.profile
+    except:
+        profile = None
     
     context = {
         'medications': user.medications.filter(is_active=True),
         'conditions': user.conditions.filter(status='active'),
         'allergies': user.allergies.all(),
         'assessments': user.assessments.all().order_by('-assessment_date', '-created_at')[:5],
-        'profile': user.profile,
+        'profile': profile,
         'clinician_accesses': user.clinician_accesses.filter(is_active=True).count(),
+        'is_clinician_view': is_clinician_view,
+        'patient': user if is_clinician_view else None,
     }
     
     return render(request, 'health_records/passport.html', context)
+
+
+@login_required
+def verify_clinician(request, clinician_id):
+    """Verify a clinician's registration number"""
+    from clinicians.models import Clinician
+    from clinicians.verification import verify_registration_number, get_registration_body_name, get_registration_body_url
+    
+    clinician = get_object_or_404(Clinician, pk=clinician_id)
+    
+    # Check if user has access to this clinician (via PatientClinicianAccess)
+    from clinicians.models import PatientClinicianAccess
+    has_access = PatientClinicianAccess.objects.filter(
+        patient=request.user,
+        clinician=clinician,
+        is_active=True
+    ).exists()
+    
+    if not has_access:
+        messages.error(request, 'You do not have access to verify this clinician.')
+        return redirect('health_records:dashboard')
+    
+    if not clinician.registration_number or not clinician.registration_body:
+        messages.error(request, 'This clinician has not provided registration information.')
+        return redirect('health_records:dashboard')
+    
+    # Attempt verification
+    verification_result = verify_registration_number(
+        clinician.registration_body,
+        clinician.registration_number,
+        clinician.first_name,
+        clinician.last_name,
+        clinician.title
+    )
+    
+    # Get register URL
+    register_url = get_registration_body_url(
+        clinician.registration_body,
+        clinician.registration_number,
+        clinician.first_name,
+        clinician.last_name
+    )
+    
+    context = {
+        'clinician': clinician,
+        'verification_result': verification_result,
+        'register_url': register_url,
+        'body_name': get_registration_body_name(clinician.registration_body),
+    }
+    
+    return render(request, 'health_records/verify_clinician.html', context)
+
+
+@login_required
+def verify_clinician_registration(request):
+    """Verify a clinician's registration - accepts form input or query parameters"""
+    from clinicians.verification import verify_registration_number, get_registration_body_name, get_registration_body_url
+    from health_records.forms import RegistrationVerificationForm
+    
+    registration_body = None
+    registration_number = None
+    verification_result = None
+    register_url = None
+    body_name = None
+    title = None
+    
+    # Check if form was submitted
+    if request.method == 'POST':
+        form = RegistrationVerificationForm(request.POST)
+        if form.is_valid():
+            registration_body = form.cleaned_data['registration_body'].upper()
+            registration_number = form.cleaned_data['registration_number'].strip()
+            title = form.cleaned_data.get('title')  # Optional field
+        else:
+            return render(request, 'health_records/verify_clinician.html', {
+                'form': form,
+                'show_form': True
+            })
+    # Check if query parameters provided
+    elif request.GET.get('body') and request.GET.get('number'):
+        registration_body = request.GET.get('body', '').strip().upper()
+        registration_number = request.GET.get('number', '').strip()
+    else:
+        # Show form for input
+        form = RegistrationVerificationForm()
+        return render(request, 'health_records/verify_clinician.html', {
+            'form': form,
+            'show_form': True
+        })
+    
+    if registration_body and registration_number:
+        # Attempt verification
+        verification_result = verify_registration_number(
+            registration_body,
+            registration_number,
+            title=title
+        )
+        
+        # Get register URL
+        register_url = get_registration_body_url(
+            registration_body,
+            registration_number
+        )
+        
+        body_name = get_registration_body_name(registration_body)
+    
+    context = {
+        'registration_body': registration_body,
+        'registration_number': registration_number,
+        'verification_result': verification_result,
+        'register_url': register_url,
+        'body_name': body_name,
+        'form': RegistrationVerificationForm(initial={
+            'registration_body': registration_body,
+            'registration_number': registration_number
+        }) if registration_body else RegistrationVerificationForm(),
+        'show_form': False
+    }
+    
+    return render(request, 'health_records/verify_clinician.html', context)
 
 
 @login_required
@@ -94,9 +265,24 @@ def dashboard(request):
     user = request.user
     profile = user.profile
     
-    # Check if onboarding is needed
-    if not profile.onboarding_completed:
+    # Check if onboarding is needed - only for truly new users with no data
+    has_data = (
+        profile.date_of_birth or
+        profile.phone_number or
+        profile.emergency_contact_name or
+        user.medications.exists() or
+        user.conditions.exists() or
+        user.allergies.exists()
+    )
+    
+    # Only redirect to onboarding if user has no data and hasn't completed onboarding
+    if not profile.onboarding_completed and not has_data:
         return redirect('health_records:onboarding')
+    
+    # If user has data but onboarding not marked complete, mark it now
+    if has_data and not profile.onboarding_completed:
+        profile.onboarding_completed = True
+        profile.save()
     
     work_history = user.work_history.all()
     current_work = work_history.filter(is_current=True)
@@ -548,7 +734,7 @@ def delete_work_history(request, pk):
 # Healthcare Feedback Views
 @login_required
 def add_feedback(request, access_pk=None):
-    """Add feedback about a healthcare organization"""
+    """Add feedback about a healthcare organisation"""
     from clinicians.models import HealthcareFeedback
     access = None
     if access_pk:
@@ -703,10 +889,24 @@ def invite_clinician(request):
                     
                     # Show consent form
                     consent_form = ConsentForm()
+                    # Get registration info for display
+                    from clinicians.verification import get_registration_body_name, get_registration_body_url
+                    registration_info = None
+                    if clinician.registration_number and clinician.registration_body:
+                        registration_info = {
+                            'body_name': get_registration_body_name(clinician.registration_body),
+                            'register_url': get_registration_body_url(
+                                clinician.registration_body,
+                                clinician.registration_number,
+                                clinician.first_name,
+                                clinician.last_name
+                            )
+                        }
                     return render(request, 'health_records/consent_form.html', {
                         'clinician': clinician,
                         'practitioner_code': practitioner_code,
-                        'consent_form': consent_form
+                        'consent_form': consent_form,
+                        'registration_info': registration_info
                     })
                 except Clinician.DoesNotExist:
                     messages.error(request, f'No practitioner found with code: {practitioner_code}. Please check the code and try again.')

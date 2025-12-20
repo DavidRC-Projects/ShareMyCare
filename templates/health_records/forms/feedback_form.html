@@ -14,7 +14,7 @@
         <div class="feedback-info-box">
             <p><strong>Privacy Notice:</strong></p>
             <ul style="margin: 0.5rem 0; padding-left: 1.5rem; color: var(--text-secondary);">
-                <li>Feedback is linked to healthcare organizations, not individual HCPs</li>
+                <li>Feedback is linked to healthcare organisations, not individual HCPs</li>
                 <li>Your feedback is private and confidential</li>
                 <li>You can choose to submit anonymously</li>
                 <li>Please provide constructive and respectful feedback</li>
@@ -25,7 +25,7 @@
             <div class="patient-info-box">
                 <p><strong>Related to:</strong> {{ access.clinician.organisation|default:"Healthcare Provider" }}</p>
                 <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                    This feedback will be linked to the organization, not the individual clinician.
+                    This feedback will be linked to the organisation, not the individual clinician.
                 </p>
             </div>
         {% endif %}
@@ -39,7 +39,7 @@
                 {% if form.organisation.errors %}
                     <span class="field-error">{{ form.organisation.errors.0 }}</span>
                 {% endif %}
-                <p class="form-hint">Name of the healthcare organization (e.g., "City Hospital", "ABC Clinic")</p>
+                <p class="form-hint">Name of the healthcare organisation (e.g., "City Hospital", "ABC Clinic")</p>
             </div>
             
             <div class="form-row">
@@ -75,7 +75,7 @@
             
             <div class="form-group checkbox-group">
                 {{ form.is_private }}
-                <label for="{{ form.is_private.id_for_label }}">Keep feedback private (only visible to you and the organization)</label>
+                <label for="{{ form.is_private.id_for_label }}">Keep feedback private (only visible to you and the organisation)</label>
             </div>
             
             <div class="form-actions">

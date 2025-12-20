@@ -15,7 +15,7 @@ class ClinicianForm(forms.ModelForm):
     class Meta:
         model = Clinician
         fields = [
-            'first_name', 'last_name', 'title', 'registration_number',
+            'first_name', 'last_name', 'title', 'registration_body', 'registration_number',
             'speciality', 'organisation', 'email', 'phone'
         ]
         widgets = {
@@ -29,6 +29,10 @@ class ClinicianForm(forms.ModelForm):
             }),
             'title': forms.Select(attrs={
                 'class': 'form-select'
+            }),
+            'registration_body': forms.Select(attrs={
+                'class': 'form-select',
+                'placeholder': 'Select registration body'
             }),
             'registration_number': forms.TextInput(attrs={
                 'class': 'form-input',
@@ -54,7 +58,7 @@ class ClinicianForm(forms.ModelForm):
 
 
 class HealthcareFeedbackForm(forms.ModelForm):
-    """Form for submitting feedback about healthcare organizations"""
+    """Form for submitting feedback about healthcare organisations"""
     class Meta:
         from .models import HealthcareFeedback
         model = HealthcareFeedback
@@ -62,7 +66,7 @@ class HealthcareFeedbackForm(forms.ModelForm):
         widgets = {
             'organisation': forms.TextInput(attrs={
                 'class': 'form-input',
-                'placeholder': 'Healthcare organization name'
+                'placeholder': 'Healthcare organisation name'
             }),
             'rating': forms.Select(attrs={
                 'class': 'form-select'

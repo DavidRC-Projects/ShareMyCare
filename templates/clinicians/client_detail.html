@@ -12,8 +12,9 @@
                 <p class="dashboard-subtitle">Client Details & Health Records</p>
             </div>
             <div class="dashboard-header-actions">
-                <a href="{% url 'clinicians:clients_list' %}" class="btn btn-secondary">← Back to Clients</a>
-                <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn btn-primary">➕ New Assessment</a>
+                <a href="{% url 'clinicians:clients_list' %}" class="btn btn-secondary btn-standard">← Back to Clients</a>
+                <a href="{% url 'health_records:passport_patient' patient.id %}" class="btn btn-secondary btn-standard">📘 Health Passport</a>
+                <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn btn-primary btn-standard">➕ New Assessment</a>
             </div>
         </div>
     </div>
@@ -58,7 +59,7 @@
                     <div class="card-icon-emoji">👤</div>
                     <h2 class="card-title">Patient Information</h2>
                 </div>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('patient-info')" id="toggle-btn-patient-info">
+                <button type="button" class="btn btn-secondary btn-standard" onclick="toggleCard('patient-info')" id="toggle-btn-patient-info">
                     <span id="toggle-icon-patient-info">▼</span> <span class="toggle-text">Show</span>
                 </button>
             </div>
@@ -95,6 +96,31 @@
                     <label class="info-label">Access Granted:</label>
                     <span class="info-value">{{ access.granted_at|date:"F d, Y" }}</span>
                 </div>
+                {% if clinician_registration_info %}
+                <div class="info-item" style="grid-column: 1 / -1; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                    <label class="info-label">Professional Registration:</label>
+                    <div style="margin-top: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <span class="info-value">
+                                <strong>{{ clinician_registration_info.body_name }}</strong> - {{ clinician_registration_info.number }}
+                            </span>
+                            {% if clinician_registration_info.verified %}
+                                <span class="badge badge-success">✓ Verified</span>
+                            {% else %}
+                                <span class="badge badge-warning">Not Verified</span>
+                            {% endif %}
+                        </div>
+                        {% if clinician_registration_info.register_url %}
+                        <a href="{{ clinician_registration_info.register_url }}" 
+                           target="_blank" 
+                           class="btn btn-secondary btn-standard" 
+                           style="margin-top: 0.5rem;">
+                            Check on {{ clinician_registration_info.body }} Register →
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -110,7 +136,7 @@
                         <div class="card-icon-emoji">💊</div>
                         <h2 class="card-title">Active Medications ({{ medications|length }})</h2>
                     </div>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('medications')" id="toggle-btn-medications">
+                    <button type="button" class="btn btn-secondary btn-standard" onclick="toggleCard('medications')" id="toggle-btn-medications">
                         <span id="toggle-icon-medications">▼</span> <span class="toggle-text">Show</span>
                     </button>
                 </div>
@@ -148,7 +174,7 @@
                         <div class="card-icon-emoji">🏥</div>
                         <h2 class="card-title">Conditions ({{ conditions|length }})</h2>
                     </div>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('conditions')" id="toggle-btn-conditions">
+                    <button type="button" class="btn btn-secondary btn-standard" onclick="toggleCard('conditions')" id="toggle-btn-conditions">
                         <span id="toggle-icon-conditions">▼</span> <span class="toggle-text">Show</span>
                     </button>
                 </div>
@@ -183,7 +209,7 @@
                         <div class="card-icon-emoji">⚠️</div>
                         <h2 class="card-title">Allergies ({{ allergies|length }})</h2>
                     </div>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('allergies')" id="toggle-btn-allergies">
+                    <button type="button" class="btn btn-secondary btn-standard" onclick="toggleCard('allergies')" id="toggle-btn-allergies">
                         <span id="toggle-icon-allergies">▼</span> <span class="toggle-text">Show</span>
                     </button>
                 </div>
@@ -216,10 +242,10 @@
                     <h2 class="card-title">Assessments ({{ total_assessments }})</h2>
                 </div>
                 <div class="card-actions-group">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCard('assessments')" id="toggle-btn-assessments">
+                    <button type="button" class="btn btn-secondary btn-standard" onclick="toggleCard('assessments')" id="toggle-btn-assessments">
                         <span id="toggle-icon-assessments">▼</span> <span class="toggle-text">Show</span>
                     </button>
-                    <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn btn-primary btn-sm">➕ Create New Assessment</a>
+                    <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn btn-primary btn-standard">➕ Create New Assessment</a>
                 </div>
             </div>
         </div>
@@ -303,7 +329,7 @@
             {% else %}
             <div class="empty-state">
                 <p>No assessments recorded yet.</p>
-                <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn btn-primary">Create First Assessment</a>
+                <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn btn-primary btn-standard">Create First Assessment</a>
             </div>
             {% endif %}
         </div>
@@ -422,6 +448,32 @@
     flex-wrap: wrap;
 }
 
+/* Standardize button sizes on client detail page */
+.dashboard-container .btn-standard,
+.dashboard-container .btn.btn-standard {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+/* Header buttons can be slightly larger but still compact */
+.dashboard-header-actions .btn-standard {
+    font-size: 0.8125rem;
+    padding: 0.5rem 1rem;
+    min-height: 36px;
+}
+
+/* Card toggle buttons should match dashboard card buttons */
+.dashboard-card .btn-standard {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    min-height: 32px;
+}
+
 @media (max-width: 768px) {
     .client-stats-overview {
         grid-template-columns: repeat(2, 1fr);
@@ -439,6 +491,24 @@
     
     .info-grid {
         grid-template-columns: 1fr;
+    }
+    
+    /* Ensure buttons fit well on mobile */
+    .dashboard-header-actions {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.5rem;
+    }
+    
+    .dashboard-header-actions .btn-standard {
+        width: 100%;
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .card-actions-group .btn-standard {
+        flex: 1;
+        min-width: 0;
     }
 }
 

@@ -7,7 +7,7 @@
 <div class="form-container">
     <div class="form-card">
         <div class="form-header">
-            <h1 class="form-title">📷 Quick Note Upload</h1>
+            <h1 class="form-title">Quick Assessment</h1>
             <a href="{% url 'clinicians:create_assessment' patient.id %}" class="btn-close">✕</a>
         </div>
         
@@ -15,16 +15,36 @@
             <p><strong>Patient:</strong> {{ patient.get_full_name|default:patient.username }}</p>
         </div>
         
-        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border: 2px dashed #20B2AA; margin-bottom: 2rem;">
-            <div style="margin-bottom: 1rem;">
-                <h3 style="margin-top: 0; color: #20B2AA;">Quick Assessment Entry</h3>
-                <p style="color: #666; font-size: 0.95rem; line-height: 1.6; margin: 0.5rem 0;">
-                    Upload a photo of your notes for quick assessment entry. Our AI system will automatically extract key findings and organize them into a standardized table by category (measurements, symptoms, treatments, etc.).
-                </p>
-                <button type="button" class="btn btn-link" style="padding: 0; margin-top: 0.5rem; font-size: 0.875rem; color: #20B2AA;" onclick="showImageGuidanceModal()">
-                    ℹ️ Learn more about this feature
+        {# Quick Photo and Quick Upload buttons at the top #}
+        <div style="margin-bottom: 2rem; padding: 1.5rem; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0;">
+            <label style="display: block; margin-bottom: 1rem; font-weight: 600; font-size: 1rem;">Photo of Notes *</label>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                {# Hidden input for form submission #}
+                <input type="file" name="{{ form.practitioner_notes_image.name }}" id="{{ form.practitioner_notes_image.id_for_label }}" class="form-file-input" accept="image/*" required style="display: none;">
+                
+                {# Quick Photo button - triggers camera #}
+                <input type="file" id="take_photo_input" accept="image/*" capture="environment" onchange="handleImageUpload(this, '{{ form.practitioner_notes_image.id_for_label }}')" style="display: none;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('take_photo_input').click()" style="flex: 1; min-width: 150px; padding: 0.75rem 1.5rem; font-size: 1rem;">
+                    📷 Quick Photo
+                </button>
+                
+                {# Quick Upload button - triggers file picker #}
+                <input type="file" id="choose_file_input" accept="image/*" onchange="handleImageUpload(this, '{{ form.practitioner_notes_image.id_for_label }}')" style="display: none;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('choose_file_input').click()" style="flex: 1; min-width: 150px; padding: 0.75rem 1.5rem; font-size: 1rem;">
+                    📁 Quick Upload
                 </button>
             </div>
+            <div id="image-upload-feedback" style="display: none; margin-top: 1rem; padding: 1rem; background-color: #e8f5e9; border-radius: 4px; border: 1px solid #4caf50;">
+                <p style="margin: 0; color: #2e7d32; font-weight: 500;">✓ Image selected successfully!</p>
+                <p id="image-filename" style="margin: 0.5rem 0 0 0; color: #2e7d32; font-size: 0.9rem;"></p>
+            </div>
+            <div id="image-preview-container" style="display: none; margin-top: 1rem;">
+                <p style="margin-bottom: 0.5rem; font-weight: 500;">Preview:</p>
+                <img id="image-preview" src="" alt="Preview" style="max-width: 100%; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; padding: 0.5rem; background: #f9f9f9;">
+            </div>
+            {% if form.practitioner_notes_image.errors %}
+                <span class="field-error" style="display: block; margin-top: 0.5rem;">{{ form.practitioner_notes_image.errors.0 }}</span>
+            {% endif %}
         </div>
         
         <form method="post" class="form" enctype="multipart/form-data" id="quickUploadForm">
@@ -53,28 +73,6 @@
                 </div>
             </div>
             
-            {# Image Upload #}
-            <div class="form-group">
-                <label for="{{ form.practitioner_notes_image.id_for_label }}">Photo of Notes *</label>
-                <div class="file-upload-wrapper">
-                    <input type="file" name="{{ form.practitioner_notes_image.name }}" id="{{ form.practitioner_notes_image.id_for_label }}" class="form-file-input" accept="image/*" capture="environment" onchange="handleImageUpload(this)" required>
-                    <label for="{{ form.practitioner_notes_image.id_for_label }}" class="file-upload-label">
-                        <span class="file-upload-text">📷 Take Photo or Choose Image</span>
-                    </label>
-                </div>
-                <div id="image-upload-feedback" style="display: none; margin-top: 1rem; padding: 1rem; background-color: #e8f5e9; border-radius: 4px; border: 1px solid #4caf50;">
-                    <p style="margin: 0; color: #2e7d32; font-weight: 500;">✓ Image selected successfully!</p>
-                    <p id="image-filename" style="margin: 0.5rem 0 0 0; color: #2e7d32; font-size: 0.9rem;"></p>
-                </div>
-                <div id="image-preview-container" style="display: none; margin-top: 1rem;">
-                    <p style="margin-bottom: 0.5rem; font-weight: 500;">Preview:</p>
-                    <img id="image-preview" src="" alt="Preview" style="max-width: 100%; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; padding: 0.5rem; background: #f9f9f9;">
-                </div>
-                {% if form.practitioner_notes_image.errors %}
-                    <span class="field-error">{{ form.practitioner_notes_image.errors.0 }}</span>
-                {% endif %}
-            </div>
-            
             <input type="hidden" name="quick_save_with_image" value="1">
             
             <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-start;">
@@ -89,14 +87,20 @@
 
 <script>
 // Handle image upload feedback
-function handleImageUpload(input) {
+function handleImageUpload(input, targetInputId) {
     const feedbackDiv = document.getElementById('image-upload-feedback');
     const filenameDiv = document.getElementById('image-filename');
     const previewContainer = document.getElementById('image-preview-container');
     const previewImg = document.getElementById('image-preview');
+    const targetInput = document.getElementById(targetInputId);
     
     if (input.files && input.files[0]) {
         const file = input.files[0];
+        
+        // Sync the file to the hidden form input
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        targetInput.files = dataTransfer.files;
         
         // Show feedback
         feedbackDiv.style.display = 'block';
@@ -168,14 +172,14 @@ document.addEventListener('DOMContentLoaded', function() {
             <ol style="line-height: 1.8;">
                 <li><strong>Upload your notes:</strong> Take a photo or upload an image of your handwritten or typed notes.</li>
                 <li><strong>Automatic processing:</strong> Our AI system extracts key findings from your notes using Azure Document Intelligence.</li>
-                <li><strong>Standardized table:</strong> Findings are automatically organized into a standardized table by category (measurements, symptoms, treatments, etc.).</li>
+                <li><strong>Standardised table:</strong> Findings are automatically organised into a standardised table by category (measurements, symptoms, treatments, etc.).</li>
                 <li><strong>Quick save:</strong> Save immediately with just the image and required fields.</li>
             </ol>
             
             <h3 style="margin-top: 1.5rem;">Benefits</h3>
             <ul style="line-height: 1.8;">
                 <li>Save time by avoiding manual data entry</li>
-                <li>Ensure consistency with standardized findings format</li>
+                <li>Ensure consistency with standardised findings format</li>
                 <li>Reduce transcription errors</li>
                 <li>Maintain complete records with original notes image</li>
             </ul>

@@ -12,10 +12,12 @@
             <a href="{% url 'health_records:passport' %}" class="btn btn-secondary btn-header">📱 Health Passport</a>
             <a href="{% url 'health_records:emergency_card' %}" class="btn btn-secondary btn-header">🚨 Emergency Card</a>
             <a href="{% url 'health_records:invite_clinician' %}" class="btn btn-primary btn-header">Share with Clinicians</a>
+            <a href="{% url 'health_records:verify_clinician_registration' %}" class="btn btn-secondary btn-header">Verify Registration</a>
         </div>
     </div>
 
-    <!-- Profile Completion Progress -->
+    <!-- Profile Completion Progress - Only show if not 100% complete -->
+    {% if profile_completion.percent < 100 %}
     <div class="profile-progress-card">
         <h3>Profile Completion</h3>
         <div class="progress-container">
@@ -51,6 +53,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
 
     <div class="dashboard-grid">
@@ -310,6 +313,21 @@
                                         {% if access.clinician.organisation %}{{ access.clinician.organisation }}{% endif %}
                                         {% if access.clinician.speciality %} • {{ access.clinician.speciality }}{% endif %}
                                     </p>
+                                    {% if access.clinician.registration_number and access.clinician.registration_body %}
+                                    <p class="item-details" style="font-size: 0.875rem; margin-top: 0.25rem;">
+                                        <strong>{{ access.clinician.get_registration_body_display }}:</strong> {{ access.clinician.registration_number }}
+                                        {% if access.clinician.registration_verified %}
+                                            <span class="badge badge-success" style="margin-left: 0.5rem; font-size: 0.75rem;">✓ Verified</span>
+                                        {% else %}
+                                            <a href="{% url 'health_records:verify_clinician' access.clinician.id %}" 
+                                               class="btn-link" 
+                                               style="margin-left: 0.5rem; font-size: 0.75rem;"
+                                               title="Verify registration">
+                                                Verify →
+                                            </a>
+                                        {% endif %}
+                                    </p>
+                                    {% endif %}
                                     <div class="item-badges">
                                         <span class="badge badge-{{ access.access_level }}">{{ access.get_access_level_display }}</span>
                                         {% if access.consent_given_at %}
@@ -525,11 +543,11 @@
                     <div class="empty-state">
                         <p>No feedback submitted yet.</p>
                         <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                            Share your experience with healthcare organizations (feedback is private and linked to organizations, not individual HCPs).
+                            Share your experience with healthcare organisations (feedback is private and linked to organisations, not individual HCPs).
                         </p>
                         {% if clinician_accesses %}
                             <div style="margin-top: var(--spacing-sm);">
-                                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Quick feedback for organizations you've worked with:</p>
+                                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Quick feedback for organisations you've worked with:</p>
                                 {% for access in clinician_accesses|slice:":3" %}
                                     {% if access.clinician.organisation %}
                                         <a href="{% url 'health_records:add_feedback_for_access' access.pk %}" class="btn btn-secondary btn-sm" style="margin: 0.25rem; display: inline-block;">

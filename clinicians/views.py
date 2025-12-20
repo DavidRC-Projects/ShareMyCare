@@ -423,6 +423,24 @@ def client_detail(request, patient_id):
         models.Q(created_at__gte=thirty_days_ago)
     )
     
+    # Get clinician info for verification display
+    from .verification import get_registration_body_name, get_registration_body_url
+    
+    clinician_registration_info = None
+    if access.clinician.registration_number and access.clinician.registration_body:
+        clinician_registration_info = {
+            'body': access.clinician.registration_body,
+            'body_name': get_registration_body_name(access.clinician.registration_body),
+            'number': access.clinician.registration_number,
+            'verified': access.clinician.registration_verified,
+            'register_url': get_registration_body_url(
+                access.clinician.registration_body,
+                access.clinician.registration_number,
+                access.clinician.first_name,
+                access.clinician.last_name
+            )
+        }
+    
     context = {
         'clinician': clinician,
         'patient': patient,
@@ -435,6 +453,7 @@ def client_detail(request, patient_id):
         'work_history': work_history,
         'recent_assessments_count': recent_assessments.count(),
         'total_assessments': assessments.count(),
+        'clinician_registration_info': clinician_registration_info,
     }
     return render(request, 'clinicians/client_detail.html', context)
 
@@ -802,6 +821,78 @@ def create_assessment(request, patient_id):
         'clinician': clinician,
         'is_physiotherapist': is_physiotherapist
     })
+
+
+@login_required
+def clients_list_json(request):
+    """JSON endpoint for clients list (for Quick Photo modal)"""
+    if not hasattr(request.user, 'clinician_profile'):
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    clinician = request.user.clinician_profile
+    
+    # Get all active patient accesses
+    patient_accesses = PatientClinicianAccess.objects.filter(
+        clinician=clinician,
+        is_active=True
+    ).select_related('patient')
+    
+    clients = []
+    for access in patient_accesses:
+        clients.append({
+            'id': access.patient.id,
+            'name': access.patient.get_full_name() or access.patient.username,
+        })
+    
+    # Sort by access granted date (newest first)
+    clients.sort(key=lambda x: x['name'])
+    
+    return JsonResponse({'clients': clients})
+
+
+@login_required
+def select_client_for_quick_upload(request):
+    """Page to select a client for quick upload"""
+    if not hasattr(request.user, 'clinician_profile'):
+        messages.error(request, 'You must be a registered clinician to access this page.')
+        return redirect('health_records:dashboard')
+    
+    clinician = request.user.clinician_profile
+    
+    # Get all active patient accesses
+    patient_accesses = PatientClinicianAccess.objects.filter(
+        clinician=clinician,
+        is_active=True
+    ).select_related('patient')
+    
+    # Search functionality
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        patient_accesses = patient_accesses.filter(
+            models.Q(patient__username__icontains=search_query) |
+            models.Q(patient__first_name__icontains=search_query) |
+            models.Q(patient__last_name__icontains=search_query) |
+            models.Q(patient__email__icontains=search_query)
+        )
+    
+    # Prepare client data
+    clients_data = []
+    for access in patient_accesses:
+        clients_data.append({
+            'patient': access.patient,
+            'access': access,
+        })
+    
+    # Sort by access granted date (newest first)
+    clients_data.sort(key=lambda x: x['access'].granted_at, reverse=True)
+    
+    context = {
+        'clinician': clinician,
+        'clients_data': clients_data,
+        'search_query': search_query,
+        'total_clients': len(clients_data),
+    }
+    return render(request, 'clinicians/select_client_quick_upload.html', context)
 
 
 @login_required

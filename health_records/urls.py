@@ -8,7 +8,10 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('onboarding/', views.onboarding, name='onboarding'),
     path('passport/', views.passport_view, name='passport'),
+    path('passport/<int:patient_id>/', views.passport_view, name='passport_patient'),
     path('emergency-card/', views.emergency_card, name='emergency_card'),
+    path('verify-clinician/<int:clinician_id>/', views.verify_clinician, name='verify_clinician'),
+    path('verify-clinician/', views.verify_clinician_registration, name='verify_clinician_registration'),
     
     # Medication URLs
     path('medications/add/', views.add_medication, name='add_medication'),

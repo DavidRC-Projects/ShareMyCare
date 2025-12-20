@@ -5,20 +5,17 @@
 
 {% block content %}
 <div class="dashboard-container">
-    <div class="dashboard-header">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-            <div>
-                <h1 class="dashboard-title">My Clients</h1>
-                <p class="dashboard-subtitle">Manage and view all your patients</p>
-            </div>
-            <div class="dashboard-header-actions">
-                <a href="{% url 'clinicians:dashboard' %}" class="btn btn-secondary btn-standard">Dashboard</a>
+    <div class="dashboard-header" style="margin-bottom: 1rem; padding-bottom: 0;">
+        <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="text-align: center;">
+                <h1 class="dashboard-title" style="margin-bottom: 0.5rem;">My Clients</h1>
+                <p class="dashboard-subtitle" style="margin-bottom: 0;">Manage and view all your patients</p>
             </div>
         </div>
     </div>
 
     <!-- Stats Summary -->
-    <div class="stats-summary-grid" style="margin-bottom: 2rem;">
+    <div class="stats-summary-grid" style="margin-bottom: 1rem;">
         <div class="stat-card">
             <div class="stat-icon">👥</div>
             <div class="stat-content">
@@ -234,6 +231,9 @@
     padding: 1.5rem;
     margin-bottom: 2rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .search-form {
@@ -289,7 +289,7 @@
     flex-shrink: 0;
 }
 
-/* Standardized Button Styles */
+/* Standardised Button Styles */
 .btn-standard {
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
@@ -310,14 +310,22 @@
 }
 
 .btn-primary.btn-standard {
-    background: var(--primary-color);
+    background: linear-gradient(135deg, var(--healthcare-primary) 0%, var(--primary-color) 100%);
     color: white;
-    border-color: var(--primary-color);
+    border: none;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.15);
 }
 
 .btn-primary.btn-standard:hover {
-    background: var(--primary-hover);
-    border-color: var(--primary-hover);
+    background: linear-gradient(135deg, var(--healthcare-primary-hover) 0%, var(--primary-hover) 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 
 .btn-secondary.btn-standard {
@@ -335,8 +343,11 @@
 /* Clients List */
 .clients-list-container {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0.75rem;
+    max-width: 1400px;
+    margin: 0 auto 0 auto;
+    padding-bottom: 0;
 }
 
 .client-list-item {
@@ -345,16 +356,17 @@
 }
 
 .client-list-header-compact {
-    padding: 0.875rem 1rem;
+    padding: 0.5rem 0.75rem;
     background: var(--bg-white);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
     transition: all 0.2s ease;
+    min-height: 40px;
 }
 
 .client-list-header-compact:hover {
@@ -363,43 +375,44 @@
 }
 
 .client-list-name-compact {
-    font-size: 1rem;
+    font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-primary);
     flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .client-list-toggle {
-    background: var(--bg-light);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    background: transparent;
+    border: none;
     cursor: pointer;
-    padding: 0.5rem 0.75rem;
+    padding: 0.25rem;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
     flex-shrink: 0;
-    font-size: 0.875rem;
-    min-height: 36px;
-    min-width: 36px;
+    font-size: 0.75rem;
+    min-height: 24px;
+    min-width: 24px;
+    color: var(--text-secondary);
 }
 
 .client-list-toggle:hover {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
-    color: white;
+    color: var(--primary-color);
 }
 
 .client-list-toggle:hover .toggle-icon {
-    color: white;
+    color: var(--primary-color);
 }
 
 
 .toggle-icon {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .client-list-toggle.active .toggle-icon {
@@ -410,10 +423,11 @@
     margin-top: 0.5rem;
     background: var(--bg-white);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     animation: slideDown 0.3s ease;
+    grid-column: 1 / -1;
 }
 
 @keyframes slideDown {
@@ -615,19 +629,76 @@
 }
 
 /* Responsive */
+@media (max-width: 1920px) {
+    .clients-list-container {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+@media (max-width: 1440px) {
+    .clients-list-container {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
 @media (max-width: 1024px) {
     .clients-list-container {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 
 @media (max-width: 768px) {
+    .dashboard-container {
+        padding: 0.75rem 1rem;
+    }
+    
+    .dashboard-header {
+        margin-bottom: 0.75rem;
+    }
+    
+    .dashboard-title {
+        font-size: 1.75rem;
+    }
+    
+    .dashboard-subtitle {
+        font-size: 1rem;
+    }
+    
+    .stats-summary-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .search-card {
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
     .search-form {
         flex-direction: column;
+        gap: 0.75rem;
     }
     
     .search-input-wrapper {
         width: 100%;
+    }
+    
+    .search-input {
+        padding: 0.75rem 1rem;
+        font-size: 16px; /* Prevents zoom on iOS */
     }
     
     .search-submit {
@@ -635,47 +706,171 @@
     }
     
     .clients-list-container {
-        grid-template-columns: 1fr;
-    }
-    
-    .client-stats-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
     }
     
-    .client-card-footer {
-        flex-direction: column;
-        align-items: flex-start;
+    .client-list-header-compact {
+        padding: 0.75rem;
+        min-height: 44px; /* Touch target size */
     }
     
-    .client-footer-item {
-        width: 100%;
-        justify-content: space-between;
-    }
-}
-
-@media (max-width: 480px) {
-    .stats-summary-grid {
-        grid-template-columns: 1fr;
+    .client-list-name-compact {
+        font-size: 0.9375rem;
     }
     
-    .client-stats-grid {
-        grid-template-columns: 1fr;
+    .client-list-toggle {
+        min-height: 36px;
+        min-width: 36px;
+        padding: 0.375rem;
+    }
+    
+    .toggle-icon {
+        font-size: 0.875rem;
+    }
+    
+    .client-list-card {
+        margin-top: 0.5rem;
     }
     
     .client-card-header {
         padding: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .client-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .client-name {
+        font-size: 1rem;
+    }
+    
+    .client-email {
+        font-size: 0.8125rem;
     }
     
     .client-card-body {
         padding: 1rem;
     }
     
+    .client-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .client-stat-item {
+        padding: 0.625rem;
+    }
+    
+    .client-stat-icon {
+        font-size: 1.25rem;
+    }
+    
+    .client-stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .client-stat-label {
+        font-size: 0.6875rem;
+    }
+    
     .client-card-footer {
-        padding: 1rem;
+        padding: 0.875rem 1rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .client-footer-item {
+        width: 100%;
+        justify-content: space-between;
     }
     
     .client-card-actions {
-        padding: 1rem;
+        padding: 0.875rem 1rem;
+    }
+    
+    .client-card-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-container {
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .dashboard-title {
+        font-size: 1.5rem;
+    }
+    
+    .dashboard-subtitle {
+        font-size: 0.9375rem;
+    }
+    
+    .stats-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .stat-card {
+        padding: 0.875rem;
+    }
+    
+    .stat-icon {
+        font-size: 1.75rem;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8125rem;
+    }
+    
+    .search-card {
+        padding: 0.875rem;
+    }
+    
+    .clients-list-container {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .client-list-header-compact {
+        padding: 0.75rem;
+    }
+    
+    .client-list-name-compact {
+        font-size: 0.9375rem;
+    }
+    
+    .client-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .client-card-header {
+        padding: 0.875rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .client-card-body {
+        padding: 0.875rem;
+    }
+    
+    .client-card-footer {
+        padding: 0.875rem;
+    }
+    
+    .client-card-actions {
+        padding: 0.875rem;
     }
 }
 </style>
@@ -686,15 +881,17 @@ let currentHighlightedAssessments = null;
 function toggleClientDetails(clientId) {
     const cardDiv = document.getElementById(clientId);
     const toggleBtn = document.getElementById('toggle-' + clientId);
+    if (!toggleBtn) return;
+    
     const toggleIcon = toggleBtn.querySelector('.toggle-icon');
     
-    if (cardDiv.style.display === 'none') {
+    if (cardDiv.style.display === 'none' || !cardDiv.style.display) {
         cardDiv.style.display = 'block';
-        toggleIcon.textContent = '▲';
+        if (toggleIcon) toggleIcon.textContent = '▲';
         toggleBtn.classList.add('active');
     } else {
         cardDiv.style.display = 'none';
-        toggleIcon.textContent = '▼';
+        if (toggleIcon) toggleIcon.textContent = '▼';
         toggleBtn.classList.remove('active');
     }
 }

@@ -31,6 +31,31 @@ class Clinician(models.Model):
         default='dr'
     )
     registration_number = models.CharField(max_length=100, blank=True)
+    registration_body = models.CharField(
+        max_length=20,
+        choices=[
+            ('GMC', 'GMC - General Medical Council'),
+            ('NMC', 'NMC - Nursing and Midwifery Council'),
+            ('HCPC', 'HCPC - Health and Care Professions Council'),
+            ('other', 'Other'),
+        ],
+        blank=True,
+        null=True,
+        help_text="Professional registration body"
+    )
+    registration_verified = models.BooleanField(
+        default=False,
+        help_text="Whether the registration number has been verified"
+    )
+    registration_verified_at = models.DateTimeField(null=True, blank=True)
+    registration_verified_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='verified_registrations',
+        help_text="User who verified the registration"
+    )
     speciality = models.CharField(max_length=200, blank=True)
     organisation = models.CharField(max_length=200, blank=True)
     email = models.EmailField()
@@ -177,7 +202,7 @@ class FamilyMemberAccess(models.Model):
 
 
 class HealthcareFeedback(models.Model):
-    """Private feedback about healthcare organizations (not individual HCPs)"""
+    """Private feedback about healthcare organisations (not individual HCPs)"""
     patient = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -186,7 +211,7 @@ class HealthcareFeedback(models.Model):
     )
     organisation = models.CharField(
         max_length=200,
-        help_text="The healthcare organization (not individual HCP name)"
+        help_text="The healthcare organisation (not individual HCP name)"
     )
     access = models.ForeignKey(
         PatientClinicianAccess,
@@ -234,7 +259,7 @@ class HealthcareFeedback(models.Model):
     
     is_private = models.BooleanField(
         default=True,
-        help_text="Keep feedback private (only visible to you and the organization)"
+        help_text="Keep feedback private (only visible to you and the organisation)"
     )
     
     created_at = models.DateTimeField(auto_now_add=True)

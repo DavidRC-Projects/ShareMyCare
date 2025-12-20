@@ -40,9 +40,24 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="{{ form.registration_number.id_for_label }}">Registration Number</label>
-                    {{ form.registration_number }}
+                    <label for="{{ form.registration_body.id_for_label }}">Registration Body</label>
+                    {{ form.registration_body }}
                 </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.registration_number.id_for_label }}">Registration Number</label>
+                {{ form.registration_number }}
+                {% if form.registration_number.value %}
+                <div style="margin-top: 0.5rem;">
+                    <a href="{% url 'health_records:verify_clinician_registration' %}?body={{ form.registration_body.value }}&number={{ form.registration_number.value }}" 
+                       class="btn btn-secondary btn-sm" 
+                       target="_blank"
+                       style="font-size: 0.75rem;">
+                        Verify Registration →
+                    </a>
+                </div>
+                {% endif %}
             </div>
             
             <div class="form-group">

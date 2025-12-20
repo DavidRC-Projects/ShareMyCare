@@ -16,6 +16,26 @@
                     Organisation: {{ clinician.organisation }}
                 </p>
             {% endif %}
+            {% if clinician.registration_number and clinician.registration_body %}
+                <div class="registration-info" style="margin-top: 0.5rem; padding: 0.75rem; background: var(--bg-light); border-radius: 8px; border-left: 3px solid var(--primary-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <strong style="font-size: 0.875rem;">Registration:</strong>
+                            <span style="font-size: 0.875rem; margin-left: 0.5rem;">
+                                {{ clinician.get_registration_body_display }} - {{ clinician.registration_number }}
+                            </span>
+                            {% if clinician.registration_verified %}
+                                <span class="badge badge-success" style="margin-left: 0.5rem; font-size: 0.75rem;">✓ Verified</span>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'health_records:verify_clinician_registration' %}?body={{ clinician.registration_body }}&number={{ clinician.registration_number }}" 
+                           class="btn btn-secondary btn-standard" 
+                           target="_blank">
+                            Verify Registration
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
         </div>
 
         <div class="consent-notice">
@@ -145,7 +165,7 @@
                         >
                         <span class="consent-label-text">
                             <strong>Healthcare Feedback</strong>
-                            <span class="consent-description">Feedback you've provided about healthcare organizations</span>
+                            <span class="consent-description">Feedback you've provided about healthcare organisations</span>
                         </span>
                     </label>
                 </div>

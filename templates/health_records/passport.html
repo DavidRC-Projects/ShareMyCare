@@ -8,30 +8,38 @@
     <div class="book-controls">
         <button class="book-btn prev-btn" onclick="turnPage(-1)" id="prevBtn">← Previous</button>
         <span class="page-indicator">
-            <span id="currentPage">1</span> / <span id="totalPages">7</span>
+            <span id="currentPage">1</span> / <span id="totalPages">4</span>
         </span>
         <button class="book-btn next-btn" onclick="turnPage(1)" id="nextBtn">Next →</button>
     </div>
 
     <div class="book-wrapper">
         <div class="book" id="healthBook">
-            <!-- Cover Page -->
+            <!-- Spread 1: Cover (left) + Personal Info (right) -->
             <div class="page cover-page">
                 <div class="page-content">
                     <div class="cover-design">
                         <div class="passport-title-large">HEALTH PASSPORT</div>
                         <div class="passport-subtitle-large">ShareMyCare</div>
                         <div class="cover-icon">📘</div>
-                        <div class="cover-name">{{ profile.user.get_full_name|default:profile.user.username }}</div>
+                        <div class="cover-name">
+                            {% if is_clinician_view %}
+                                {{ patient.get_full_name|default:patient.username }}
+                            {% else %}
+                                {{ profile.user.get_full_name|default:profile.user.username }}
+                            {% endif %}
+                        </div>
                         {% if profile.date_of_birth %}
                             <div class="cover-dob">Born: {{ profile.date_of_birth|date:"F d, Y" }}</div>
+                        {% elif is_clinician_view and patient.profile.date_of_birth %}
+                            <div class="cover-dob">Born: {{ patient.profile.date_of_birth|date:"F d, Y" }}</div>
                         {% endif %}
                         <div class="cover-stamp">OFFICIAL</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Page 1: Personal Information -->
+            <!-- Page 1: Personal Information (right side of spread 1) -->
             <div class="page">
                 <div class="page-content">
                     <div class="page-header">
@@ -80,9 +88,11 @@
                         </div>
                         {% endif %}
                         
+                        {% if not is_clinician_view %}
                         <div class="page-footer">
                             <a href="{% url 'health_records:edit_profile' %}" class="btn btn-primary btn-sm">Edit Profile</a>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -129,9 +139,11 @@
                                 <p>You haven't added any medications yet. Add your medications to keep your health passport complete.</p>
                             </div>
                         {% endif %}
+                        {% if not is_clinician_view %}
                         <div class="page-footer">
                             <a href="{% url 'health_records:add_medication' %}" class="btn btn-primary btn-sm">Add Medication</a>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -170,9 +182,11 @@
                                 <p>You haven't added any medical conditions yet. Add your conditions to keep your health passport complete.</p>
                             </div>
                         {% endif %}
+                        {% if not is_clinician_view %}
                         <div class="page-footer">
                             <a href="{% url 'health_records:add_condition' %}" class="btn btn-primary btn-sm">Add Condition</a>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -220,9 +234,11 @@
                                 <p>You haven't added any allergies yet. It's important to record all known allergies for emergency situations.</p>
                             </div>
                         {% endif %}
+                        {% if not is_clinician_view %}
                         <div class="page-footer">
                             <a href="{% url 'health_records:add_allergy' %}" class="btn btn-primary btn-sm">Add Allergy</a>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -263,9 +279,11 @@
                                 <p>You haven't added any health assessments yet. Add assessments to track your health over time.</p>
                             </div>
                         {% endif %}
+                        {% if not is_clinician_view %}
                         <div class="page-footer">
                             <a href="{% url 'health_records:add_assessment' %}" class="btn btn-primary btn-sm">Add Assessment</a>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -291,8 +309,12 @@
     </div>
 
     <div class="book-actions">
-        <a href="{% url 'health_records:dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
-        <a href="{% url 'health_records:emergency_card' %}" class="btn btn-primary">Emergency Card</a>
+        {% if is_clinician_view %}
+            <a href="{% url 'clinicians:client_detail' patient.id %}" class="btn btn-secondary">← Back to Client</a>
+        {% else %}
+            <a href="{% url 'health_records:dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+            <a href="{% url 'health_records:emergency_card' %}" class="btn btn-primary">Emergency Card</a>
+        {% endif %}
     </div>
 </div>
 
@@ -311,6 +333,23 @@
     gap: 2rem;
     margin-bottom: 2rem;
     flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .book-controls {
+        gap: 1rem;
+        flex-wrap: nowrap;
+    }
+    
+    .book-btn {
+        flex: 1;
+        max-width: 150px;
+    }
+    
+    .page-indicator {
+        min-width: 60px;
+        font-size: 1rem;
+    }
 }
 
 .book-btn {
@@ -342,6 +381,7 @@
     text-align: center;
 }
 
+
 .book-wrapper {
     perspective: 2000px;
     margin: 2rem 0;
@@ -359,17 +399,25 @@
 
 .page {
     position: absolute;
-    width: 100%;
+    width: 50%;
     height: 100%;
     background: #f5f5f5;
     border: 1px solid #ddd;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     transform-origin: left center;
-    transition: transform 0.6s ease, opacity 0.3s ease;
+    transition: transform 0.6s ease;
     backface-visibility: hidden;
+}
+
+.page:nth-child(odd) {
     left: 0;
-    top: 0;
-    display: block;
+    border-right: 2px solid #ccc;
+}
+
+.page:nth-child(even) {
+    right: 0;
+    border-left: 2px solid #ccc;
+    transform-origin: right center;
 }
 
 .page-content {
@@ -670,7 +718,14 @@
     flex-wrap: wrap;
 }
 
-/* Page Turning Animation - handled by JavaScript */
+/* Page Turning Animation */
+.page.turned {
+    transform: rotateY(-180deg);
+}
+
+.page.turned:nth-child(even) {
+    transform: rotateY(180deg);
+}
 
 @media (max-width: 1024px) {
     .book {
@@ -681,8 +736,25 @@
 }
 
 @media (max-width: 768px) {
+    /* Mobile: Show one page at a time instead of two */
     .book {
-        height: 400px;
+        height: 500px;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .page {
+        width: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+    }
+    
+    .page:nth-child(even) {
+        right: 0;
+        left: 0;
+        transform-origin: left center;
     }
     
     .page-content {
@@ -690,61 +762,162 @@
     }
     
     .passport-title-large {
-        font-size: 2rem;
+        font-size: 1.75rem;
     }
     
     .page-title {
+        font-size: 1.25rem;
+    }
+    
+    .book-controls {
+        gap: 1rem;
+    }
+    
+    .book-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Update JavaScript for mobile - show one page at a time */
+    .page.turned {
+        display: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .book {
+        height: 400px;
+    }
+    
+    .page-content {
+        padding: 1rem;
+    }
+    
+    .passport-title-large {
         font-size: 1.5rem;
+    }
+    
+    .cover-icon {
+        font-size: 3rem;
+    }
+    
+    .empty-icon {
+        font-size: 3rem;
     }
 }
 </style>
 
 <script>
-let currentPageIndex = 0;
-const totalPages = 7; // Cover + 5 content pages + back cover = 7 pages total
+let currentSpread = 0;
+// Total spreads: 
+// Spread 0: Cover (page 0) + Personal Info (page 1)
+// Spread 1: Medications (page 2) + Conditions (page 3)
+// Spread 2: Allergies (page 4) + Assessments (page 5)
+// Spread 3: Back Cover (page 6) - shown alone
+const totalSpreads = 4;
 const pages = document.querySelectorAll('.page');
 
-document.getElementById('totalPages').textContent = totalPages;
+document.getElementById('totalPages').textContent = totalSpreads;
 
 function updatePageDisplay() {
-    // Show page number (1-indexed for user display)
-    document.getElementById('currentPage').textContent = currentPageIndex + 1;
+    const isMobile = window.innerWidth <= 768;
     
-    // Update button states
-    document.getElementById('prevBtn').disabled = currentPageIndex === 0;
-    document.getElementById('nextBtn').disabled = currentPageIndex >= totalPages - 1;
-    
-    // Show all pages, but only the current one is fully visible
-    pages.forEach((page, index) => {
-        if (index === currentPageIndex) {
-            // Current page - fully visible
-            page.style.display = 'block';
-            page.style.opacity = '1';
-            page.style.transform = 'rotateY(0deg)';
-            page.style.zIndex = totalPages;
-            page.classList.remove('turned');
-        } else if (index < currentPageIndex) {
-            // Pages before current - turned/hidden
-            page.style.display = 'block';
-            page.style.opacity = '0.3';
-            page.style.transform = 'rotateY(-180deg)';
-            page.style.zIndex = totalPages - (currentPageIndex - index);
-            page.classList.add('turned');
-        } else {
-            // Pages after current - hidden
-            page.style.display = 'block';
-            page.style.opacity = '0';
-            page.style.transform = 'rotateY(0deg)';
-            page.style.zIndex = totalPages - (index - currentPageIndex);
-            page.classList.remove('turned');
-        }
-    });
+    if (isMobile) {
+        // Mobile: Show one page at a time (7 pages total)
+        const totalMobilePages = 7;
+        document.getElementById('totalPages').textContent = totalMobilePages;
+        document.getElementById('currentPage').textContent = currentSpread + 1;
+        
+        // Update button states
+        document.getElementById('prevBtn').disabled = currentSpread === 0;
+        document.getElementById('nextBtn').disabled = currentSpread >= totalMobilePages - 1;
+        
+        // Show only the current page
+        pages.forEach((page, index) => {
+            if (index === currentSpread) {
+                page.style.display = 'block';
+                page.classList.remove('turned');
+            } else {
+                page.style.display = 'none';
+                page.classList.add('turned');
+            }
+        });
+    } else {
+        // Desktop: Show pages in pairs (spreads)
+        document.getElementById('totalPages').textContent = totalSpreads;
+        document.getElementById('currentPage').textContent = currentSpread + 1;
+        
+        // Update button states
+        document.getElementById('prevBtn').disabled = currentSpread === 0;
+        document.getElementById('nextBtn').disabled = currentSpread >= totalSpreads - 1;
+        
+        // Show pages in pairs (spreads)
+        pages.forEach((page, index) => {
+            if (currentSpread === 0) {
+                // Spread 0: Cover (0) + Personal Info (1)
+                if (index === 0 || index === 1) {
+                    page.style.display = 'block';
+                    page.classList.remove('turned');
+                } else {
+                    page.style.display = 'block';
+                    page.classList.add('turned');
+                }
+            } else if (currentSpread === 1) {
+                // Spread 1: Medications (2) + Conditions (3)
+                if (index === 2 || index === 3) {
+                    page.style.display = 'block';
+                    page.classList.remove('turned');
+                } else if (index < 2) {
+                    page.style.display = 'block';
+                    page.classList.add('turned');
+                } else {
+                    page.style.display = 'block';
+                    page.classList.add('turned');
+                }
+            } else if (currentSpread === 2) {
+                // Spread 2: Allergies (4) + Assessments (5)
+                if (index === 4 || index === 5) {
+                    page.style.display = 'block';
+                    page.classList.remove('turned');
+                } else if (index < 4) {
+                    page.style.display = 'block';
+                    page.classList.add('turned');
+                } else {
+                    page.style.display = 'block';
+                    page.classList.add('turned');
+                }
+            } else if (currentSpread === 3) {
+                // Spread 3: Back Cover (6) - show alone
+                if (index === 6) {
+                    page.style.display = 'block';
+                    page.classList.remove('turned');
+                } else {
+                    page.style.display = 'block';
+                    page.classList.add('turned');
+                }
+            }
+        });
+    }
 }
 
+// Update on window resize
+window.addEventListener('resize', function() {
+    updatePageDisplay();
+});
+
 function turnPage(direction) {
-    const newIndex = currentPageIndex + direction;
-    if (newIndex >= 0 && newIndex < totalPages) {
-        currentPageIndex = newIndex;
+    const isMobile = window.innerWidth <= 768;
+    let maxPages;
+    
+    if (isMobile) {
+        maxPages = 7; // 7 individual pages on mobile
+    } else {
+        maxPages = totalSpreads; // 4 spreads on desktop
+    }
+    
+    const newIndex = currentSpread + direction;
+    if (newIndex >= 0 && newIndex < maxPages) {
+        currentSpread = newIndex;
         updatePageDisplay();
     }
 }

@@ -22,7 +22,7 @@ def support(request):
 
 
 def help_center(request):
-    """Help Center page"""
+    """Help Centre page"""
     return render(request, 'pages/help_center.html')
 
 

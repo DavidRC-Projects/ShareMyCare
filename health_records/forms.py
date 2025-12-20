@@ -345,3 +345,55 @@ class WorkHistoryForm(forms.ModelForm):
             required=False
         )
 
+
+class RegistrationVerificationForm(forms.Form):
+    """Form for verifying clinician registration"""
+    REGISTRATION_BODY_CHOICES = [
+        ('', 'Select registration body...'),
+        ('GMC', 'GMC - General Medical Council'),
+        ('NMC', 'NMC - Nursing and Midwifery Council'),
+        ('HCPC', 'HCPC - Health and Care Professions Council'),
+        ('other', 'Other'),
+    ]
+    
+    TITLE_CHOICES = [
+        ('', 'Select profession (optional)...'),
+        ('dr', 'Doctor'),
+        ('nurse', 'Nurse'),
+        ('physiotherapist', 'Physiotherapist'),
+        ('paramedic', 'Paramedic'),
+        ('specialist', 'Specialist'),
+        ('other', 'Other'),
+    ]
+    
+    registration_body = forms.ChoiceField(
+        choices=REGISTRATION_BODY_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'placeholder': 'Select registration body'
+        }),
+        label='Registration Body'
+    )
+    
+    registration_number = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Enter registration number'
+        }),
+        label='Registration Number'
+    )
+    
+    title = forms.ChoiceField(
+        choices=TITLE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'placeholder': 'Select profession (optional)'
+        }),
+        label='Profession (Optional)',
+        help_text='Select if verifying a physiotherapist - helps validate HCPC registration format'
+    )
+

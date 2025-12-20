@@ -11,6 +11,71 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
+    <script>
+        // Immediately ensure mobile nav is visible on mobile - runs before page renders
+        (function() {
+            function forceMobileNavVisible() {
+                const mobileNav = document.getElementById('mobileBottomNav');
+                if (mobileNav) {
+                    const isMobile = window.innerWidth <= 768;
+                    if (isMobile) {
+                        // Force visibility with inline styles - this overrides everything
+                        // Use cssText to set all properties at once, preventing any intermediate states
+                        // Explicitly set transform to ensure it's not hidden
+                        mobileNav.style.cssText = `
+                            display: flex !important;
+                            visibility: visible !important;
+                            opacity: 1 !important;
+                            position: fixed !important;
+                            bottom: 0 !important;
+                            left: 0 !important;
+                            right: 0 !important;
+                            z-index: 1000 !important;
+                            width: 100vw !important;
+                            max-width: 100vw !important;
+                            box-sizing: border-box !important;
+                            overflow: visible !important;
+                            transform: translateZ(0) translateY(0) !important;
+                            margin: 0 !important;
+                            padding-left: 0 !important;
+                            padding-right: 0 !important;
+                        `;
+                        mobileNav.setAttribute('data-mobile-nav', 'true');
+                        // Force a reflow to ensure styles are applied
+                        void mobileNav.offsetHeight;
+                        // Double-check computed styles
+                        const computed = window.getComputedStyle(mobileNav);
+                        if (computed.display === 'none' || computed.visibility === 'hidden' || computed.opacity === '0') {
+                            // If still hidden, force it again
+                            mobileNav.style.display = 'flex';
+                            mobileNav.style.visibility = 'visible';
+                            mobileNav.style.opacity = '1';
+                            mobileNav.style.transform = 'translateZ(0) translateY(0)';
+                        }
+                    } else {
+                        // Hide on desktop
+                        mobileNav.style.display = 'none';
+                    }
+                }
+            }
+            // Run immediately - don't wait for anything
+            forceMobileNavVisible();
+            // Also run when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', forceMobileNavVisible);
+            }
+            // Run multiple times to catch any timing issues
+            setTimeout(forceMobileNavVisible, 0);
+            setTimeout(forceMobileNavVisible, 10);
+            setTimeout(forceMobileNavVisible, 50);
+            setTimeout(forceMobileNavVisible, 100);
+            setTimeout(forceMobileNavVisible, 200);
+            // Also run on window load
+            window.addEventListener('load', forceMobileNavVisible);
+            // Run on resize
+            window.addEventListener('resize', forceMobileNavVisible);
+        })();
+    </script>
 </head>
 <body>
     <nav class="navbar">
@@ -41,6 +106,50 @@
                     <li><a href="{% url 'login' %}" onclick="closeMobileMenu()">Sign In</a></li>
                     <li><a href="{% url 'register' %}" onclick="closeMobileMenu()">Get Started</a></li>
                 {% endif %}
+                <li class="nav-accessibility">
+                    <button type="button" class="nav-accessibility-btn" id="accessibilityToggle" aria-label="Accessibility Options" onclick="toggleAccessibilityPanel(event)">
+                        <span class="accessibility-icon">♿</span>
+                        <span class="accessibility-label">Accessibility</span>
+                    </button>
+                    <!-- Accessibility Widget Panel -->
+                    <div class="accessibility-panel" id="accessibilityPanel" style="display: none;">
+                        <div class="accessibility-header">
+                            <h3>Accessibility Options</h3>
+                            <button class="accessibility-close" onclick="toggleAccessibilityPanel(event)" aria-label="Close accessibility panel">×</button>
+                        </div>
+                        <div class="accessibility-content">
+                            <div class="accessibility-option">
+                                <label for="fontSize">Text Size</label>
+                                <div class="accessibility-controls">
+                                    <button class="accessibility-btn" onclick="adjustFontSize('decrease')" aria-label="Decrease text size">A-</button>
+                                    <button class="accessibility-btn" onclick="adjustFontSize('reset')" aria-label="Reset text size">A</button>
+                                    <button class="accessibility-btn" onclick="adjustFontSize('increase')" aria-label="Increase text size">A+</button>
+                                </div>
+                            </div>
+                            <div class="accessibility-option">
+                                <label for="contrast">High Contrast</label>
+                                <button class="accessibility-toggle-btn" id="contrastToggle" onclick="toggleContrast()" aria-label="Toggle high contrast">
+                                    <span class="toggle-indicator"></span>
+                                </button>
+                            </div>
+                            <div class="accessibility-option">
+                                <label for="readableFont">Readable Font</label>
+                                <button class="accessibility-toggle-btn" id="readableFontToggle" onclick="toggleReadableFont()" aria-label="Toggle readable font">
+                                    <span class="toggle-indicator"></span>
+                                </button>
+                            </div>
+                            <div class="accessibility-option">
+                                <label for="underlineLinks">Underline Links</label>
+                                <button class="accessibility-toggle-btn" id="underlineLinksToggle" onclick="toggleUnderlineLinks()" aria-label="Toggle underline links">
+                                    <span class="toggle-indicator"></span>
+                                </button>
+                            </div>
+                            <div class="accessibility-option">
+                                <button class="accessibility-reset-btn" onclick="resetAccessibility()">Reset All</button>
+                            </div>
+                        </div>
+                    </div>
+                </li>
             </ul>
         </div>
     </nav>
@@ -75,7 +184,7 @@
             <div class="footer-section">
                 <h4>Support</h4>
                 <ul>
-                    <li><a href="{% url 'help_center' %}">Help Center</a></li>
+                    <li><a href="{% url 'help_center' %}">Help Centre</a></li>
                     <li><a href="{% url 'contact' %}">Contact</a></li>
                     <li><a href="{% url 'support' %}">Support</a></li>
                 </ul>
@@ -94,31 +203,78 @@
         </div>
     </footer>
 
-    {% if user.is_authenticated and not is_clinician %}
+    {% if user.is_authenticated %}
     <!-- Mobile Bottom Navigation -->
-    <nav class="mobile-bottom-nav" id="mobileBottomNav">
-        <a href="{% url 'health_records:dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-label">Home</span>
-        </a>
-        <a href="{% url 'health_records:dashboard' %}#records" class="nav-item">
-            <span class="nav-icon">📋</span>
-            <span class="nav-label">Records</span>
-        </a>
-        <button class="nav-item nav-fab" id="quickAddFab" onclick="toggleQuickAddMenu()" aria-label="Quick Add">
-            <span class="nav-icon">➕</span>
-        </button>
-        <a href="{% url 'health_records:invite_clinician' %}" class="nav-item {% if request.resolver_match.url_name == 'invite_clinician' %}active{% endif %}">
-            <span class="nav-icon">👨‍⚕️</span>
-            <span class="nav-label">Share</span>
-        </a>
-        <a href="{% url 'health_records:edit_profile' %}" class="nav-item {% if request.resolver_match.url_name == 'edit_profile' %}active{% endif %}">
-            <span class="nav-icon">👤</span>
-            <span class="nav-label">Profile</span>
-        </a>
+    <nav class="mobile-bottom-nav" id="mobileBottomNav" data-mobile-nav="true" style="display: flex !important; visibility: visible !important; opacity: 1 !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1000 !important; width: 100vw !important; max-width: 100vw !important; box-sizing: border-box !important; overflow: visible !important;">
+        {% if is_clinician %}
+            <a href="{% url 'health_records:home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' and request.resolver_match.app_name == 'health_records' %}active{% endif %}" data-no-interrupt onclick="ensureNavVisibleOnClick(event)">
+                <svg class="nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9.55228 21 10 20.5523 10 20V16C10 15.4477 10.4477 15 11 15H13C13.5523 15 14 15.4477 14 16V20C14 20.5523 14.4477 21 15 21M9 21H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="nav-label">Home</span>
+            </a>
+            <a href="{% url 'clinicians:clients_list' %}" class="nav-item {% if request.resolver_match.url_name == 'clients_list' %}active{% endif %}">
+                <svg class="nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span class="nav-label">Clients</span>
+            </a>
+            <button class="nav-item nav-fab" id="quickPhotoFab" onclick="openQuickPhotoModal()" aria-label="Quick Photo">
+                <svg class="nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 4H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </button>
+            <a href="{% url 'clinicians:select_client_quick_upload' %}" class="nav-item {% if request.resolver_match.url_name == 'select_client_quick_upload' %}active{% endif %}">
+                <svg class="nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="nav-label">Upload</span>
+            </a>
+            <a href="{% url 'clinicians:edit_profile' %}" class="nav-item {% if request.resolver_match.url_name == 'edit_profile' %}active{% endif %}">
+                <svg class="nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <span class="nav-label">Profile</span>
+            </a>
+        {% else %}
+            <a href="{% url 'health_records:home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' and request.resolver_match.app_name == 'health_records' %}active{% endif %}" data-no-interrupt onclick="ensureNavVisibleOnClick(event)">
+                <svg class="nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9.55228 21 10 20.5523 10 20V16C10 15.4477 10.4477 15 11 15H13C13.5523 15 14 15.4477 14 16V20C14 20.5523 14.4477 21 15 21M9 21H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="nav-label">Home</span>
+            </a>
+            <a href="{% url 'health_records:dashboard' %}#records" class="nav-item">
+                <svg class="nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span class="nav-label">Records</span>
+            </a>
+            <button class="nav-item nav-fab" id="quickAddFab" onclick="toggleQuickAddMenu()" aria-label="Quick Add">
+                <svg class="nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+            <a href="{% url 'health_records:invite_clinician' %}" class="nav-item {% if request.resolver_match.url_name == 'invite_clinician' %}active{% endif %}">
+                <svg class="nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="nav-label">Share</span>
+            </a>
+            <a href="{% url 'health_records:edit_profile' %}" class="nav-item {% if request.resolver_match.url_name == 'edit_profile' %}active{% endif %}">
+                <svg class="nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <span class="nav-label">Profile</span>
+            </a>
+        {% endif %}
     </nav>
 
-    <!-- Quick Add Menu (FAB Menu) -->
+    <!-- Quick Add Menu (FAB Menu) - Only for patients -->
+    {% if not is_clinician %}
     <div class="fab-menu" id="fabMenu" style="display: none;">
         <div class="fab-menu-overlay" onclick="toggleQuickAddMenu()"></div>
         <div class="fab-menu-content">
@@ -145,6 +301,63 @@
         </div>
     </div>
     {% endif %}
+    
+    <!-- Quick Photo Modal - For clinicians -->
+    {% if is_clinician %}
+    <div id="quickPhotoModal" class="modal" style="display: none;">
+        <div class="modal-overlay" onclick="closeQuickPhotoModal()"></div>
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Quick Photo</h2>
+                <button type="button" class="modal-close" onclick="closeQuickPhotoModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                {% csrf_token %}
+                <div id="client-selection-step">
+                    <p style="margin-bottom: 1rem;">Select a client to upload notes photo:</p>
+                    <div id="quick-photo-clients-list" style="max-height: 400px; overflow-y: auto;">
+                        {% if user.is_authenticated and is_clinician %}
+                            <div style="padding: 0.5rem; text-align: center; color: var(--text-secondary);">
+                                Loading clients...
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div id="photo-upload-step" style="display: none;">
+                    <p style="margin-bottom: 1rem;">Client: <strong id="selected-client-name"></strong></p>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <input type="file" id="quick-photo-take-photo" accept="image/*" capture="environment" onchange="handleQuickPhotoUpload(this)" style="display: none;">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('quick-photo-take-photo').click()" style="flex: 1; min-width: 150px;">
+                            📷 Take Photo
+                        </button>
+                        <input type="file" id="quick-photo-choose-file" accept="image/*" onchange="handleQuickPhotoUpload(this)" style="display: none;">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('quick-photo-choose-file').click()" style="flex: 1; min-width: 150px;">
+                            📁 Choose Image
+                        </button>
+                    </div>
+                    <div id="quick-photo-feedback" style="display: none; margin-top: 1rem; padding: 1rem; background-color: #e8f5e9; border-radius: 4px; border: 1px solid #4caf50;">
+                        <p style="margin: 0; color: #2e7d32; font-weight: 500;">✓ Image selected successfully!</p>
+                        <p id="quick-photo-filename" style="margin: 0.5rem 0 0 0; color: #2e7d32; font-size: 0.9rem;"></p>
+                    </div>
+                    <div id="quick-photo-preview-container" style="display: none; margin-top: 1rem;">
+                        <p style="margin-bottom: 0.5rem; font-weight: 500;">Preview:</p>
+                        <img id="quick-photo-preview" src="" alt="Preview" style="max-width: 100%; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; padding: 0.5rem; background: #f9f9f9;">
+                    </div>
+                    <input type="hidden" id="selected-patient-id" value="">
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 1rem; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between;">
+                <button type="button" class="btn btn-secondary" id="back-to-clients-btn" onclick="backToClientSelection()" style="display: none;">← Back</button>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeQuickPhotoModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="upload-photo-btn" onclick="uploadQuickPhoto()" style="display: none;">Upload & Extract</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
 
     {% block extra_js %}{% endblock %}
     <script>
@@ -214,6 +427,636 @@
                 fabMenu.style.display = 'none';
             }
         });
+
+        // Accessibility Widget Functions
+        function toggleAccessibilityPanel(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const panel = document.getElementById('accessibilityPanel');
+            const toggle = document.getElementById('accessibilityToggle');
+            if (!panel || !toggle) {
+                console.error('Accessibility panel or toggle not found');
+                return;
+            }
+            
+            const isHidden = panel.style.display === 'none' || !panel.style.display || panel.style.display === '';
+            
+            if (isHidden) {
+                panel.style.display = 'block';
+                toggle.setAttribute('aria-expanded', 'true');
+                toggle.classList.add('active');
+            } else {
+                panel.style.display = 'none';
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.classList.remove('active');
+            }
+        }
+        
+        // Make functions globally accessible
+        window.toggleAccessibilityPanel = toggleAccessibilityPanel;
+        
+        // Ensure button works on desktop - add click handler directly
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('accessibilityToggle');
+            if (toggle) {
+                // Remove any existing handlers and add fresh one
+                toggle.onclick = function(event) {
+                    toggleAccessibilityPanel(event);
+                };
+            }
+        });
+
+        // Font Size Adjustment
+        function adjustFontSize(action) {
+            const body = document.body;
+            let currentSize = parseFloat(getComputedStyle(body).fontSize);
+            const baseSize = 16; // Base font size in pixels
+            
+            if (action === 'increase') {
+                currentSize = Math.min(currentSize * 1.2, 24); // Max 24px
+            } else if (action === 'decrease') {
+                currentSize = Math.max(currentSize / 1.2, 12); // Min 12px
+            } else {
+                currentSize = baseSize;
+            }
+            
+            body.style.fontSize = currentSize + 'px';
+            localStorage.setItem('accessibility-fontSize', currentSize);
+        }
+        window.adjustFontSize = adjustFontSize;
+
+        // High Contrast Toggle
+        function toggleContrast() {
+            const body = document.body;
+            const toggle = document.getElementById('contrastToggle');
+            if (!toggle) return;
+            body.classList.toggle('high-contrast');
+            const isActive = body.classList.contains('high-contrast');
+            toggle.classList.toggle('active', isActive);
+            localStorage.setItem('accessibility-highContrast', isActive);
+        }
+        window.toggleContrast = toggleContrast;
+
+        // Readable Font Toggle
+        function toggleReadableFont() {
+            const body = document.body;
+            const toggle = document.getElementById('readableFontToggle');
+            if (!toggle) return;
+            body.classList.toggle('readable-font');
+            const isActive = body.classList.contains('readable-font');
+            toggle.classList.toggle('active', isActive);
+            localStorage.setItem('accessibility-readableFont', isActive);
+        }
+        window.toggleReadableFont = toggleReadableFont;
+
+        // Underline Links Toggle
+        function toggleUnderlineLinks() {
+            const body = document.body;
+            const toggle = document.getElementById('underlineLinksToggle');
+            if (!toggle) return;
+            body.classList.toggle('underline-links');
+            const isActive = body.classList.contains('underline-links');
+            toggle.classList.toggle('active', isActive);
+            localStorage.setItem('accessibility-underlineLinks', isActive);
+        }
+        window.toggleUnderlineLinks = toggleUnderlineLinks;
+
+        // Reset All Accessibility Settings
+        function resetAccessibility() {
+            const body = document.body;
+            body.style.fontSize = '';
+            body.classList.remove('high-contrast', 'readable-font', 'underline-links');
+            
+            // Reset toggles
+            const contrastToggle = document.getElementById('contrastToggle');
+            const readableFontToggle = document.getElementById('readableFontToggle');
+            const underlineLinksToggle = document.getElementById('underlineLinksToggle');
+            
+            if (contrastToggle) contrastToggle.classList.remove('active');
+            if (readableFontToggle) readableFontToggle.classList.remove('active');
+            if (underlineLinksToggle) underlineLinksToggle.classList.remove('active');
+            
+            // Clear localStorage
+            localStorage.removeItem('accessibility-fontSize');
+            localStorage.removeItem('accessibility-highContrast');
+            localStorage.removeItem('accessibility-readableFont');
+            localStorage.removeItem('accessibility-underlineLinks');
+        }
+        window.resetAccessibility = resetAccessibility;
+
+        // Load saved accessibility settings on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Font size
+            const savedFontSize = localStorage.getItem('accessibility-fontSize');
+            if (savedFontSize) {
+                document.body.style.fontSize = savedFontSize + 'px';
+            }
+            
+            // High contrast
+            if (localStorage.getItem('accessibility-highContrast') === 'true') {
+                document.body.classList.add('high-contrast');
+                document.getElementById('contrastToggle').classList.add('active');
+            }
+            
+            // Readable font
+            if (localStorage.getItem('accessibility-readableFont') === 'true') {
+                document.body.classList.add('readable-font');
+                document.getElementById('readableFontToggle').classList.add('active');
+            }
+            
+            // Underline links
+            if (localStorage.getItem('accessibility-underlineLinks') === 'true') {
+                document.body.classList.add('underline-links');
+                document.getElementById('underlineLinksToggle').classList.add('active');
+            }
+        });
+
+        // Close accessibility panel when clicking outside
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('accessibilityPanel');
+            const toggle = document.getElementById('accessibilityToggle');
+            if (panel && toggle) {
+                if (!panel.contains(event.target) && !toggle.contains(event.target)) {
+                    if (panel.style.display === 'block') {
+                        panel.style.display = 'none';
+                        toggle.setAttribute('aria-expanded', 'false');
+                        toggle.classList.remove('active');
+                    }
+                }
+            }
+        });
+        
+        // Ensure mobile bottom nav stays visible on mobile devices
+        function ensureMobileNavVisible() {
+            const mobileNav = document.getElementById('mobileBottomNav');
+            if (!mobileNav) {
+                // Retry if nav doesn't exist yet
+                setTimeout(ensureMobileNavVisible, 100);
+                return;
+            }
+            
+            // Check if we're on mobile
+            const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+            const isMobile = viewportWidth <= 768;
+            
+            if (isMobile) {
+                // Force visibility with inline styles - this overrides everything
+                // Explicitly set transform to translateY(0) to prevent it from being hidden
+                mobileNav.style.cssText = `
+                    display: flex !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    position: fixed !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    z-index: 1000 !important;
+                    width: 100vw !important;
+                    max-width: 100vw !important;
+                    box-sizing: border-box !important;
+                    overflow: visible !important;
+                    transform: translateZ(0) translateY(0) !important;
+                    margin: 0 !important;
+                    padding-left: 0 !important;
+                    padding-right: 0 !important;
+                `;
+                mobileNav.setAttribute('data-mobile-nav', 'true');
+                // Force a reflow to ensure styles are applied immediately
+                void mobileNav.offsetHeight;
+                // Double-check computed styles to ensure it's actually visible
+                const computed = window.getComputedStyle(mobileNav);
+                if (computed.display === 'none' || computed.visibility === 'hidden' || computed.opacity === '0' || computed.transform.includes('translateY') && !computed.transform.includes('translateY(0)')) {
+                    // If still hidden or transformed, force it again
+                    mobileNav.style.display = 'flex';
+                    mobileNav.style.visibility = 'visible';
+                    mobileNav.style.opacity = '1';
+                    mobileNav.style.transform = 'translateZ(0) translateY(0)';
+                }
+            } else {
+                // On desktop, hide it
+                mobileNav.style.display = 'none';
+            }
+        }
+        
+        // Make function globally available
+        window.ensureMobileNavVisible = ensureMobileNavVisible;
+        
+        // Function to ensure nav stays visible when clicking home button
+        function ensureNavVisibleOnClick(event) {
+            const mobileNav = document.getElementById('mobileBottomNav');
+            if (mobileNav) {
+                // Remove inline style to let CSS take over
+                mobileNav.removeAttribute('style');
+                mobileNav.setAttribute('data-mobile-nav', 'true');
+                // Force immediate visibility check
+                const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+                if (viewportWidth <= 768) {
+                    // Force a reflow
+                    void mobileNav.offsetHeight;
+                }
+            }
+            // Don't prevent default - allow normal navigation
+        }
+        
+        // Make it globally available
+        window.ensureNavVisibleOnClick = ensureNavVisibleOnClick;
+        
+        // Use MutationObserver to watch for nav bar style changes and remove conflicting inline styles
+        if (typeof MutationObserver !== 'undefined') {
+            const observer = new MutationObserver(function(mutations) {
+                const mobileNav = document.getElementById('mobileBottomNav');
+                if (mobileNav) {
+                    const isMobile = window.innerWidth <= 768;
+                    if (isMobile) {
+                        // If someone tries to hide it with inline styles, remove them
+                        const style = mobileNav.getAttribute('style');
+                        const computedStyle = window.getComputedStyle(mobileNav);
+                        if ((style && (style.includes('display: none') || style.includes('display:none'))) || 
+                            computedStyle.display === 'none' || 
+                            computedStyle.visibility === 'hidden') {
+                            mobileNav.removeAttribute('style');
+                            mobileNav.setAttribute('data-mobile-nav', 'true');
+                            // Force visibility as fallback
+                            if (window.getComputedStyle(mobileNav).display === 'none') {
+                                mobileNav.style.display = 'flex';
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Start observing when DOM is ready
+            function startObserving() {
+                const mobileNav = document.getElementById('mobileBottomNav');
+                if (mobileNav) {
+                    observer.observe(mobileNav, {
+                        attributes: true,
+                        attributeFilter: ['style', 'class'],
+                        childList: false,
+                        subtree: false
+                    });
+                }
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', startObserving);
+            } else {
+                startObserving();
+            }
+        }
+        
+        // Run immediately - don't wait
+        ensureMobileNavVisible();
+        
+        // Also run when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                ensureMobileNavVisible();
+                setTimeout(ensureMobileNavVisible, 0);
+                setTimeout(ensureMobileNavVisible, 50);
+                setTimeout(ensureMobileNavVisible, 100);
+            });
+        } else {
+            setTimeout(ensureMobileNavVisible, 0);
+            setTimeout(ensureMobileNavVisible, 50);
+            setTimeout(ensureMobileNavVisible, 100);
+        }
+        
+        // Run on page load and resize - with immediate execution
+        window.addEventListener('load', function() {
+            ensureMobileNavVisible();
+            // Run multiple times to ensure it sticks
+            setTimeout(ensureMobileNavVisible, 0);
+            setTimeout(ensureMobileNavVisible, 10);
+            setTimeout(ensureMobileNavVisible, 50);
+            setTimeout(ensureMobileNavVisible, 100);
+            setTimeout(ensureMobileNavVisible, 200);
+        });
+        window.addEventListener('resize', ensureMobileNavVisible);
+        
+        // Ensure nav is visible on scroll (in case something hides it initially)
+        window.addEventListener('scroll', function() {
+            ensureMobileNavVisible();
+        }, { passive: true });
+        
+        // Also ensure it's visible immediately on touch/pointer events (mobile interaction)
+        document.addEventListener('touchstart', function() {
+            ensureMobileNavVisible();
+        }, { passive: true });
+        
+        document.addEventListener('pointerdown', function() {
+            ensureMobileNavVisible();
+        }, { passive: true });
+        
+        // Also run on pageshow (handles back/forward navigation and initial load)
+        window.addEventListener('pageshow', function(event) {
+            ensureMobileNavVisible();
+            setTimeout(ensureMobileNavVisible, 0);
+            setTimeout(ensureMobileNavVisible, 10);
+            setTimeout(ensureMobileNavVisible, 50);
+            setTimeout(ensureMobileNavVisible, 100);
+            setTimeout(ensureMobileNavVisible, 200);
+            setTimeout(ensureMobileNavVisible, 500);
+        });
+        
+        // Run after any navigation completes (including AJAX navigation)
+        let lastUrl = location.href;
+        new MutationObserver(() => {
+            const url = location.href;
+            if (url !== lastUrl) {
+                lastUrl = url;
+                ensureMobileNavVisible();
+                setTimeout(ensureMobileNavVisible, 0);
+                setTimeout(ensureMobileNavVisible, 50);
+                setTimeout(ensureMobileNavVisible, 100);
+            }
+        }).observe(document, {subtree: true, childList: true});
+        
+        // Also run periodically on mobile to ensure it stays visible
+        if (window.innerWidth <= 768) {
+            // Run immediately and then periodically
+            ensureMobileNavVisible();
+            setInterval(function() {
+                const mobileNav = document.getElementById('mobileBottomNav');
+                if (mobileNav && window.innerWidth <= 768) {
+                    const computedStyle = window.getComputedStyle(mobileNav);
+                    const rect = mobileNav.getBoundingClientRect();
+                    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+                    
+                    // Check if nav is hidden or positioned off-screen
+                    if (computedStyle.display === 'none' || 
+                        computedStyle.visibility === 'hidden' || 
+                        computedStyle.opacity === '0' ||
+                        rect.bottom < viewportHeight - 10 || // If bottom is above viewport (off-screen)
+                        (computedStyle.transform && computedStyle.transform.includes('translateY') && !computedStyle.transform.includes('translateY(0)'))) {
+                        // Force visibility with inline styles
+                        mobileNav.style.cssText = `
+                            display: flex !important;
+                            visibility: visible !important;
+                            opacity: 1 !important;
+                            position: fixed !important;
+                            bottom: 0 !important;
+                            left: 0 !important;
+                            right: 0 !important;
+                            z-index: 1000 !important;
+                            width: 100vw !important;
+                            max-width: 100vw !important;
+                            box-sizing: border-box !important;
+                            overflow: visible !important;
+                            transform: translateZ(0) translateY(0) !important;
+                            margin: 0 !important;
+                            padding-left: 0 !important;
+                            padding-right: 0 !important;
+                        `;
+                        mobileNav.setAttribute('data-mobile-nav', 'true');
+                        // Force a reflow
+                        void mobileNav.offsetHeight;
+                    }
+                }
+            }, 100); // Check every 100ms for maximum responsiveness
+        }
+        
+        // Use matchMedia for better detection
+        const mediaQuery = window.matchMedia('(max-width: 768px)');
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener('change', ensureMobileNavVisible);
+        } else {
+            // Fallback for older browsers
+            mediaQuery.addListener(ensureMobileNavVisible);
+        }
+        
+        {% if is_clinician %}
+        // Quick Photo Modal Functions
+        let selectedPatientId = null;
+        let selectedPatientName = null;
+        let quickPhotoFile = null;
+        
+        function openQuickPhotoModal() {
+            const modal = document.getElementById('quickPhotoModal');
+            if (modal) {
+                modal.style.display = 'block';
+                loadClientsForQuickPhoto();
+            }
+        }
+        
+        function closeQuickPhotoModal() {
+            const modal = document.getElementById('quickPhotoModal');
+            if (modal) {
+                modal.style.display = 'none';
+                // Reset state
+                selectedPatientId = null;
+                selectedPatientName = null;
+                quickPhotoFile = null;
+                document.getElementById('client-selection-step').style.display = 'block';
+                document.getElementById('photo-upload-step').style.display = 'none';
+                document.getElementById('back-to-clients-btn').style.display = 'none';
+                document.getElementById('upload-photo-btn').style.display = 'none';
+                document.getElementById('quick-photo-feedback').style.display = 'none';
+                document.getElementById('quick-photo-preview-container').style.display = 'none';
+            }
+        }
+        
+        function loadClientsForQuickPhoto() {
+            const clientsList = document.getElementById('quick-photo-clients-list');
+            if (!clientsList) return;
+            
+            clientsList.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-secondary);">Loading clients...</div>';
+            
+            // Fetch clients list via JSON API
+            fetch('{% url "clinicians:clients_list_json" %}')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.clients || data.clients.length === 0) {
+                        clientsList.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-secondary);">No clients available</div>';
+                        return;
+                    }
+                    
+                    clientsList.innerHTML = '';
+                    data.clients.forEach(client => {
+                        const clientBtn = document.createElement('button');
+                        clientBtn.className = 'btn btn-secondary';
+                        clientBtn.style.cssText = 'width: 100%; margin-bottom: 0.5rem; text-align: left; padding: 0.75rem 1rem;';
+                        clientBtn.textContent = client.name;
+                        clientBtn.onclick = function() {
+                            selectClientForQuickPhoto(client.id, client.name);
+                        };
+                        clientsList.appendChild(clientBtn);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading clients:', error);
+                    clientsList.innerHTML = '<div style="padding: 1rem; text-align: center; color: #d70015;">Error loading clients. Please try again.</div>';
+                });
+        }
+        
+        function selectClientForQuickPhoto(patientId, patientName) {
+            selectedPatientId = patientId;
+            selectedPatientName = patientName;
+            document.getElementById('selected-patient-id').value = patientId;
+            document.getElementById('selected-client-name').textContent = patientName;
+            document.getElementById('client-selection-step').style.display = 'none';
+            document.getElementById('photo-upload-step').style.display = 'block';
+            document.getElementById('back-to-clients-btn').style.display = 'block';
+        }
+        
+        function backToClientSelection() {
+            document.getElementById('client-selection-step').style.display = 'block';
+            document.getElementById('photo-upload-step').style.display = 'none';
+            document.getElementById('back-to-clients-btn').style.display = 'none';
+            document.getElementById('upload-photo-btn').style.display = 'none';
+            quickPhotoFile = null;
+            document.getElementById('quick-photo-feedback').style.display = 'none';
+            document.getElementById('quick-photo-preview-container').style.display = 'none';
+        }
+        
+        function handleQuickPhotoUpload(input) {
+            const feedbackDiv = document.getElementById('quick-photo-feedback');
+            const filenameDiv = document.getElementById('quick-photo-filename');
+            const previewContainer = document.getElementById('quick-photo-preview-container');
+            const previewImg = document.getElementById('quick-photo-preview');
+            const uploadBtn = document.getElementById('upload-photo-btn');
+            
+            if (input.files && input.files[0]) {
+                quickPhotoFile = input.files[0];
+                
+                // Show feedback
+                feedbackDiv.style.display = 'block';
+                filenameDiv.textContent = `File: ${quickPhotoFile.name} (${(quickPhotoFile.size / 1024).toFixed(2)} KB)`;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(quickPhotoFile);
+                
+                // Show upload button
+                uploadBtn.style.display = 'block';
+            } else {
+                feedbackDiv.style.display = 'none';
+                previewContainer.style.display = 'none';
+                uploadBtn.style.display = 'none';
+                quickPhotoFile = null;
+            }
+        }
+        
+        function uploadQuickPhoto() {
+            if (!selectedPatientId || !quickPhotoFile) {
+                alert('Please select a client and an image');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('practitioner_notes_image', quickPhotoFile);
+            formData.append('quick_save_with_image', '1');
+            
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const completedAt = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            formData.append('assessment_date', today);
+            formData.append('completed_at', completedAt);
+            
+            // Get CSRF token
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            let csrfToken = '';
+            if (csrfInput) {
+                csrfToken = csrfInput.value;
+            } else {
+                const cookieMatch = document.cookie.match(/csrftoken=([^;]+)/);
+                if (cookieMatch) {
+                    csrfToken = cookieMatch[1];
+                }
+            }
+            
+            // Show loading state
+            const uploadBtn = document.getElementById('upload-photo-btn');
+            const originalText = uploadBtn.textContent;
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+            
+            // Upload to quick upload endpoint
+            fetch(`/clinicians/patient/${selectedPatientId}/assessment/quick-upload/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                }
+                throw new Error('Upload failed');
+            })
+            .then(html => {
+                // Check if redirect is needed
+                if (html.includes('location.href') || html.includes('redirect')) {
+                    window.location.href = `/clinicians/patient/${selectedPatientId}/assessment/quick-upload/`;
+                } else {
+                    // Success - close modal and show message
+                    closeQuickPhotoModal();
+                    alert('Photo uploaded successfully! Processing for extraction...');
+                    // Optionally reload the page or redirect
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                alert('Error uploading photo. Please try again.');
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = originalText;
+            });
+        }
+        
+        window.openQuickPhotoModal = openQuickPhotoModal;
+        window.closeQuickPhotoModal = closeQuickPhotoModal;
+        {% endif %}
+        
+        // Ensure nav stays visible on page transitions and navigation
+        window.addEventListener('pageshow', function(event) {
+            // Run immediately and with delays to catch any timing issues
+            ensureMobileNavVisible();
+            setTimeout(ensureMobileNavVisible, 0);
+            setTimeout(ensureMobileNavVisible, 50);
+            setTimeout(ensureMobileNavVisible, 100);
+            setTimeout(ensureMobileNavVisible, 200);
+        });
+        
+        // Ensure nav visible after any navigation
+        window.addEventListener('popstate', function() {
+            ensureMobileNavVisible();
+            setTimeout(ensureMobileNavVisible, 50);
+            setTimeout(ensureMobileNavVisible, 100);
+        });
+        
+        // Also listen for navigation start to prepare
+        let navigationStartTime = Date.now();
+        window.addEventListener('beforeunload', function() {
+            navigationStartTime = Date.now();
+        });
+        
+        // When page loads, ensure nav is visible
+        window.addEventListener('load', function() {
+            ensureMobileNavVisible();
+            // Keep checking for a bit after load
+            const checkInterval = setInterval(function() {
+                ensureMobileNavVisible();
+                if (Date.now() - navigationStartTime > 2000) {
+                    clearInterval(checkInterval);
+                }
+            }, 100);
+            setTimeout(function() {
+                clearInterval(checkInterval);
+            }, 2000);
+        });
+        
+        // Ensure nav stays visible after navigation - use pageshow instead of click interception
+        // This avoids interfering with normal link navigation
     </script>
 </body>
 </html>

@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Verify Clinician Registration - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1 class="form-title">Verify Clinician Registration</h1>
+            <p class="form-subtitle">
+                {% if show_form %}
+                    Enter registration details to verify
+                {% elif clinician %}
+                    Verify {{ clinician.get_title_display }} {{ clinician.full_name }}'s registration
+                {% else %}
+                    Verify Registration Details
+                {% endif %}
+            </p>
+        </div>
+
+        {% if show_form %}
+        <form method="post" class="form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="{{ form.registration_body.id_for_label }}">Registration Body *</label>
+                {{ form.registration_body }}
+                {% if form.registration_body.errors %}
+                    <span class="field-error">{{ form.registration_body.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">Profession (Optional)</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <span class="field-error">{{ form.title.errors.0 }}</span>
+                {% endif %}
+                <p class="form-hint" style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                    Select if verifying a physiotherapist - helps validate HCPC registration format (PH + digits)
+                </p>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.registration_number.id_for_label }}">Registration Number *</label>
+                {{ form.registration_number }}
+                {% if form.registration_number.errors %}
+                    <span class="field-error">{{ form.registration_number.errors.0 }}</span>
+                {% endif %}
+                <p class="form-hint" style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                    Enter the registration number (e.g., GMC: 7-8 digits, NMC: 8 digits, HCPC Physio: PH + digits, other HCPC: alphanumeric)
+                </p>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-standard">Verify Registration</button>
+                <a href="{% url 'health_records:dashboard' %}" class="btn btn-secondary btn-standard">Cancel</a>
+            </div>
+        </form>
+        {% else %}
+        <div class="verification-info">
+            <div class="info-section">
+                <h3>Registration Details</h3>
+                <div class="info-grid">
+                    {% if clinician %}
+                    <div class="info-item">
+                        <label class="info-label">Name:</label>
+                        <span class="info-value">{{ clinician.full_name }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="info-item">
+                        <label class="info-label">Registration Body:</label>
+                        <span class="info-value"><strong>{{ body_name }}</strong></span>
+                    </div>
+                    <div class="info-item">
+                        <label class="info-label">Registration Number:</label>
+                        <span class="info-value"><strong>{% if clinician %}{{ clinician.registration_number }}{% else %}{{ registration_number }}{% endif %}</strong></span>
+                    </div>
+                    {% if clinician and clinician.organisation %}
+                    <div class="info-item">
+                        <label class="info-label">Organisation:</label>
+                        <span class="info-value">{{ clinician.organisation }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="verification-status">
+                {% if verification_result.format_valid %}
+                    <div class="status-card status-valid">
+                        <div class="status-icon">✓</div>
+                        <div class="status-content">
+                            <h3>Format Valid</h3>
+                            <p>The registration number format appears to be valid for {{ body_name }}.</p>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="status-card status-invalid">
+                        <div class="status-icon">⚠</div>
+                        <div class="status-content">
+                            <h3>Format Issue</h3>
+                            <p>{{ verification_result.message }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="verification-notice">
+                    <h4>How to Verify</h4>
+                    <p>To fully verify this registration, please check the official {{ body_name }} register:</p>
+                    <ol>
+                        <li>Click the button below to open the official register</li>
+                        <li>Search for the clinician using their name or registration number</li>
+                        <li>Confirm the details match what is shown above</li>
+                    </ol>
+                    <p class="notice-text">
+                        <strong>Note:</strong> This system performs format validation only. 
+                        Full verification requires checking the official register manually. 
+                        Automated API verification is not currently available from GMC, NMC, or HCPC.
+                    </p>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                {% if register_url %}
+                <a href="{{ register_url }}" target="_blank" class="btn btn-primary btn-standard">
+                    Check on {{ body_name }} Register →
+                </a>
+                {% endif %}
+                <a href="{% url 'health_records:verify_clinician_registration' %}" class="btn btn-secondary btn-standard">
+                    Verify Another Registration
+                </a>
+                <a href="{% url 'health_records:dashboard' %}" class="btn btn-secondary btn-standard">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.verification-info {
+    margin-top: 2rem;
+}
+
+.info-section {
+    background: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.info-section h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.info-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.verification-status {
+    margin: 2rem 0;
+}
+
+.status-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.status-card.status-valid {
+    background: #e8f5e9;
+    border-left: 4px solid #4caf50;
+}
+
+.status-card.status-invalid {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+}
+
+.status-icon {
+    font-size: 2rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.status-valid .status-icon {
+    color: #4caf50;
+}
+
+.status-invalid .status-icon {
+    color: #ffc107;
+}
+
+.status-content h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.status-content p {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.verification-notice {
+    background: #e3f2fd;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.verification-notice h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+}
+
+.verification-notice ol {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.verification-notice li {
+    margin: 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.notice-text {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Select Client for Quick Upload - ShareMyCare{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="text-align: center;">
+                <h1 class="dashboard-title" style="margin-bottom: 0.5rem;">Quick Upload</h1>
+                <p class="dashboard-subtitle" style="margin-bottom: 0;">Select a client to upload notes</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-card">
+        <form method="get" action="{% url 'clinicians:select_client_quick_upload' %}" class="search-form">
+            <div class="search-input-wrapper">
+                <input 
+                    type="text" 
+                    name="search" 
+                    value="{{ search_query }}"
+                    placeholder="Search clients by name, username, or email..." 
+                    class="search-input"
+                >
+                {% if search_query %}
+                <a href="{% url 'clinicians:select_client_quick_upload' %}" class="search-clear" title="Clear search">✕</a>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary btn-standard search-submit">Search</button>
+        </form>
+    </div>
+
+    <!-- Clients List -->
+    {% if clients_data %}
+    <div class="clients-list-container">
+        {% for client_data in clients_data %}
+        <div class="client-list-item">
+            <a href="{% url 'clinicians:quick_upload_assessment' client_data.patient.id %}" class="client-list-header-compact" style="text-decoration: none; color: inherit;">
+                <span class="client-list-name-compact">
+                    {{ client_data.patient.get_full_name|default:client_data.patient.username }}
+                </span>
+                <span style="color: var(--text-secondary);">→</span>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="text-align: center; padding: 3rem 1rem;">
+        <p style="font-size: 1.125rem; color: var(--text-secondary); margin-bottom: 1rem;">
+            {% if search_query %}
+                No clients found matching "{{ search_query }}"
+            {% else %}
+                No clients available
+            {% endif %}
+        </p>
+        {% if search_query %}
+        <a href="{% url 'clinicians:select_client_quick_upload' %}" class="btn btn-secondary btn-standard">Clear Search</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

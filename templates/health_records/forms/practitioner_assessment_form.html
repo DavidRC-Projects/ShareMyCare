@@ -98,12 +98,22 @@
             </div>
             
             <div class="form-group">
-                <label for="{{ form.practitioner_notes_image.id_for_label }}">Photo of Notes</label>
-                <div class="file-upload-wrapper">
-                    <input type="file" name="{{ form.practitioner_notes_image.name }}" id="{{ form.practitioner_notes_image.id_for_label }}" class="form-file-input" accept="image/*" capture="environment" onchange="handleImageUpload(this)">
-                    <label for="{{ form.practitioner_notes_image.id_for_label }}" class="file-upload-label">
-                        <span class="file-upload-text">📷 Take Photo or Choose Image</span>
-                    </label>
+                <label>Photo of Notes</label>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    {# Hidden input for form submission #}
+                    <input type="file" name="{{ form.practitioner_notes_image.name }}" id="{{ form.practitioner_notes_image.id_for_label }}" class="form-file-input" accept="image/*" style="display: none;">
+                    
+                    {# Quick Photo button - triggers camera #}
+                    <input type="file" id="take_photo_input" accept="image/*" capture="environment" onchange="handleImageUpload(this, '{{ form.practitioner_notes_image.id_for_label }}')" style="display: none;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('take_photo_input').click()" style="flex: 1; min-width: 150px;">
+                        📷 Quick Photo
+                    </button>
+                    
+                    {# Quick Upload button - triggers file picker #}
+                    <input type="file" id="choose_file_input" accept="image/*" onchange="handleImageUpload(this, '{{ form.practitioner_notes_image.id_for_label }}')" style="display: none;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('choose_file_input').click()" style="flex: 1; min-width: 150px;">
+                        📁 Quick Upload
+                    </button>
                 </div>
                 <div id="image-upload-feedback" style="display: none; margin-top: 1rem; padding: 1rem; background-color: #e8f5e9; border-radius: 4px; border: 1px solid #4caf50;">
                     <p style="margin: 0; color: #2e7d32; font-weight: 500;">✓ Image selected successfully!</p>
@@ -120,7 +130,7 @@
                         <p class="image-hint">Upload a new image to replace this one</p>
                     </div>
                 {% endif %}
-                <p class="form-hint">You can take a photo of your notes or upload an existing image</p>
+                <p class="form-hint">Take a photo or upload an image of your notes</p>
             </div>
             
             <div class="form-actions">
@@ -136,15 +146,21 @@
 </div>
 
 <script>
-function handleImageUpload(input) {
+function handleImageUpload(input, targetInputId) {
     const feedbackDiv = document.getElementById('image-upload-feedback');
     const filenameDiv = document.getElementById('image-filename');
     const previewContainer = document.getElementById('image-preview-container');
     const previewImg = document.getElementById('image-preview');
     const currentImageSection = document.getElementById('current-image-section');
+    const targetInput = document.getElementById(targetInputId);
     
     if (input.files && input.files[0]) {
         const file = input.files[0];
+        
+        // Sync the file to the hidden form input
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        targetInput.files = dataTransfer.files;
         
         // Show feedback
         feedbackDiv.style.display = 'block';
