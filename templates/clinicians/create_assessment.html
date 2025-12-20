@@ -328,5 +328,147 @@ function handleImageUpload(input, targetInputId) {
 }
 
 </script>
+
+<style>
+/* Mobile-specific fixes for objective assessment form */
+@media (max-width: 768px) {
+    .form-container {
+        padding: 1rem 0.5rem;
+        align-items: flex-start;
+    }
+    
+    .form-card {
+        max-width: 100%;
+        padding: 1rem;
+        margin: 0;
+        border-radius: 12px;
+    }
+    
+    .form-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .form-title {
+        font-size: 1.25rem;
+        line-height: 1.3;
+    }
+    
+    .patient-info-box {
+        padding: 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Quick Photo/Upload section */
+    .form-card > div[style*="background: #f8f9fa"] {
+        padding: 1rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .form-card > div[style*="background: #f8f9fa"] > div[style*="display: flex"] {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+    
+    .form-card > div[style*="background: #f8f9fa"] button {
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 0.875rem !important;
+    }
+    
+    /* Form rows stack on mobile */
+    .form-row {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+    
+    /* Form groups */
+    .form-group {
+        width: 100%;
+        margin-bottom: 0;
+    }
+    
+    /* Inputs and textareas */
+    .form-group input[type="text"],
+    .form-group input[type="date"],
+    .form-group input[type="datetime-local"],
+    .form-group input[type="number"],
+    .form-group select,
+    .form-group textarea {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .form-group textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+    
+    /* Section titles */
+    .form-section-title {
+        font-size: 1rem;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Form actions */
+    .form-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+        width: 100%;
+    }
+    
+    .form-actions button,
+    .form-actions a {
+        width: 100%;
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Image preview */
+    #image-preview-container {
+        width: 100%;
+        overflow: hidden;
+    }
+    
+    #image-preview {
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: 200px !important;
+    }
+    
+    /* Add Detailed ROM button */
+    button[onclick="saveAndAddObjectiveMeasures()"] {
+        width: 100% !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 0.875rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-container {
+        padding: 0.5rem;
+    }
+    
+    .form-card {
+        padding: 0.75rem;
+    }
+    
+    .form-title {
+        font-size: 1.125rem;
+    }
+    
+    .form-section-title {
+        font-size: 0.9375rem;
+    }
+    
+    .form-group textarea {
+        min-height: 80px;
+    }
+}
+</style>
 {% endblock %}
 

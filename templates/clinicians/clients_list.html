@@ -92,62 +92,9 @@
                     {% endif %}
                 </div>
                 
-                <div class="client-card-body">
-                    <div class="client-stats-grid">
-                        <div class="client-stat-item">
-                            <div class="client-stat-icon">📋</div>
-                            <div class="client-stat-content">
-                                <div class="client-stat-value">{{ client_data.total_assessments }}</div>
-                                <div class="client-stat-label">Assessments</div>
-                            </div>
-                        </div>
-                        <div class="client-stat-item">
-                            <div class="client-stat-icon">💊</div>
-                            <div class="client-stat-content">
-                                <div class="client-stat-value">{{ client_data.medications_count }}</div>
-                                <div class="client-stat-label">Medications</div>
-                            </div>
-                        </div>
-                        <div class="client-stat-item">
-                            <div class="client-stat-icon">🏥</div>
-                            <div class="client-stat-content">
-                                <div class="client-stat-value">{{ client_data.conditions_count }}</div>
-                                <div class="client-stat-label">Conditions</div>
-                            </div>
-                        </div>
-                        <div class="client-stat-item">
-                            <div class="client-stat-icon">⚠️</div>
-                            <div class="client-stat-content">
-                                <div class="client-stat-value">{{ client_data.allergies_count }}</div>
-                                <div class="client-stat-label">Allergies</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="client-card-footer">
-                    <div class="client-footer-item">
-                        <span class="client-footer-label">Last Visit:</span>
-                        <span class="client-footer-value">
-                            {% if client_data.last_visit %}
-                                {{ client_data.last_visit|date:"M d, Y" }}
-                            {% else %}
-                                <span style="color: var(--text-secondary);">No visits yet</span>
-                            {% endif %}
-                        </span>
-                    </div>
-                    <div class="client-footer-item">
-                        <span class="client-footer-label">Access:</span>
-                        <span class="badge badge-info badge-sm">{{ client_data.access.get_access_level_display }}</span>
-                    </div>
-                    <div class="client-footer-item">
-                        <span class="client-footer-label">Added:</span>
-                        <span class="client-footer-value">{{ client_data.access.granted_at|date:"M d, Y" }}</span>
-                    </div>
-                </div>
-                
                 <div class="client-card-actions">
-                    <a href="{% url 'clinicians:client_detail' client_data.patient.id %}" class="btn btn-primary btn-standard">View Full Details →</a>
+                    <a href="{% url 'health_records:passport_patient' client_data.patient.id %}" class="btn btn-primary btn-standard">Health Passport</a>
+                    <a href="{% url 'clinicians:client_detail' client_data.patient.id %}" class="btn btn-primary btn-standard">Full Details</a>
                 </div>
             </div>
         </div>
@@ -589,7 +536,10 @@
 .client-card-actions {
     padding: 1rem 1.5rem;
     border-top: 1px solid var(--border-color);
-    text-align: center;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    align-items: center;
 }
 
 .badge-sm {
@@ -661,6 +611,14 @@
     
     .client-card-actions {
         padding: 0.75rem 1rem !important;
+        display: flex !important;
+        gap: 0.5rem !important;
+        justify-content: center !important;
+    }
+    
+    .client-card-actions .btn {
+        flex: 1 !important;
+        min-width: 0 !important;
     }
     
     .client-status-badge {
@@ -863,10 +821,14 @@
     
     .client-card-actions {
         padding: 0.875rem 1rem;
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
     }
     
     .client-card-actions .btn {
-        width: 100%;
+        flex: 1;
+        min-width: 0;
     }
 }
 
