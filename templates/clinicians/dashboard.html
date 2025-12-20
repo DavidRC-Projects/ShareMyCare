@@ -4,12 +4,12 @@
 {% block title %}Practitioner Dashboard - ShareMyCare{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-    <div class="dashboard-header">
-        <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 1rem;">
+<div class="dashboard-container" style="padding-bottom: 0;">
+    <div class="dashboard-header" style="margin-bottom: 0.25rem;">
+        <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
             <div style="text-align: center;">
-                <h1 class="dashboard-title">Practitioner Dashboard</h1>
-                <p class="dashboard-subtitle">Welcome, {{ clinician.full_name }}!</p>
+                <h1 class="dashboard-title" style="margin-bottom: 0.25rem;">Practitioner Dashboard</h1>
+                <p class="dashboard-subtitle" style="margin-bottom: 0.5rem;">Welcome, {{ clinician.full_name }}!</p>
             </div>
         </div>
     </div>
@@ -62,6 +62,7 @@
                 placeholder="Search clients by name..." 
                 class="search-input"
                 onkeyup="filterClients()"
+                oninput="filterClients()"
             >
             <span class="search-icon">🔍</span>
         </div>
@@ -70,7 +71,7 @@
     <div class="dashboard-grid" id="clientsGrid">
         {% if patients_with_assessments %}
             {% for patient_data in patients_with_assessments %}
-                <div class="dashboard-card client-card" data-client-name="{{ patient_data.patient.get_full_name|default:patient_data.patient.username|lower }}">
+                <div class="dashboard-card client-card" data-client-name="{{ patient_data.patient.get_full_name|default:patient_data.patient.username|lower }}" style="display: none;">
                     <div class="card-header">
                         <div class="card-title-group">
                             <div class="card-icon-emoji">👤</div>
@@ -164,7 +165,7 @@
         {% elif patient_accesses %}
             {# Fallback: Show patients from patient_accesses if patients_with_assessments is empty #}
             {% for access in patient_accesses %}
-                <div class="dashboard-card client-card" data-client-name="{{ access.patient.get_full_name|default:access.patient.username|lower }}">
+                <div class="dashboard-card client-card" data-client-name="{{ access.patient.get_full_name|default:access.patient.username|lower }}" style="display: none;">
                     <div class="card-header">
                         <div class="card-title-group">
                             <div class="card-icon-emoji">👤</div>
@@ -218,6 +219,18 @@
         {% endif %}
     </div>
 </div>
+<style>
+.dashboard-grid {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+.dashboard-container {
+    padding-bottom: 0 !important;
+}
+main {
+    padding-bottom: 0 !important;
+}
+</style>
 
 <!-- Email Modal -->
 <div id="emailModal" class="modal" style="display: none;">
@@ -651,20 +664,28 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Search functionality
+// Search functionality - hide clients by default, show only when searched
 function filterClients() {
     const searchInput = document.getElementById('clientSearchInput');
-    const searchTerm = searchInput.value.toLowerCase();
+    const searchTerm = searchInput.value.toLowerCase().trim();
     const clientCards = document.querySelectorAll('.client-card');
     
-    clientCards.forEach(function(card) {
-        const clientName = card.getAttribute('data-client-name') || '';
-        if (clientName.includes(searchTerm)) {
-            card.style.display = '';
-        } else {
+    if (searchTerm === '') {
+        // Hide all cards if search is empty
+        clientCards.forEach(function(card) {
             card.style.display = 'none';
-        }
-    });
+        });
+    } else {
+        // Show only matching cards
+        clientCards.forEach(function(card) {
+            const clientName = card.getAttribute('data-client-name') || '';
+            if (clientName.includes(searchTerm)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
 }
 
 // Tooltip functions
