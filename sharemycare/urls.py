@@ -27,7 +27,7 @@ urlpatterns = [
     path('', include('health_records.urls')),
     path('clinicians/', include('clinicians.urls')),
     # Authentication URLs - custom views (must be before allauth to take precedence)
-    path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('accounts/login/', accounts_views.CustomLoginView.as_view(), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(template_name='registration/logout.html', http_method_names=['get', 'post', 'head', 'options', 'trace']), name='logout'),
     path('accounts/register/', accounts_views.register, name='register'),
     # Allauth URLs (for additional features, but custom login/logout/register take precedence)
