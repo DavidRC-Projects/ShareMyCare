@@ -29,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-=rjf#spuz3(hxx1#iq=fw-1%fy4*sb&d6z51(hajp%05=i)3ov')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
 # Allow Heroku to set ALLOWED_HOSTS via environment variable
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
@@ -37,6 +37,10 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get
 # For Heroku, also check for the app name
 if 'DYNO' in os.environ:
     ALLOWED_HOSTS.append(os.environ.get('HEROKU_APP_NAME', '') + '.herokuapp.com')
+
+# If DEBUG is False and ALLOWED_HOSTS is empty, set a default
+if not DEBUG and not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ['*']  # Allow all hosts - should be configured properly in production
 
 
 # Application definition
