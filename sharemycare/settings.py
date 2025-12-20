@@ -34,11 +34,16 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 # Allow Heroku to set ALLOWED_HOSTS via environment variable
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
 
-# For Heroku, also check for the app name
+# For Heroku, allow all herokuapp.com subdomains
 if 'DYNO' in os.environ:
+    ALLOWED_HOSTS.append('.herokuapp.com')  # Allows all herokuapp.com subdomains
     heroku_app_name = os.environ.get('HEROKU_APP_NAME', '')
     if heroku_app_name:
         ALLOWED_HOSTS.append(heroku_app_name + '.herokuapp.com')
+
+# If DEBUG is False and ALLOWED_HOSTS is still empty, set a default
+if not DEBUG and not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ['*']  # Allow all hosts - should be configured properly in production
 
 
 # Application definition
